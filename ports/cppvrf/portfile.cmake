@@ -1,13 +1,13 @@
 vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 
-if(DEFINED ENV{LIBVRF_SOURCE_PATH})
+if(DEFINED ENV{CPPVRF_SOURCE_PATH})
     # Development option: use local source tree by setting
-    # LIBVRF_SOURCE_PATH environment variable.
-    set(SOURCE_PATH "$ENV{LIBVRF_SOURCE_PATH}")
+    # CPPVRF_SOURCE_PATH environment variable.
+    set(SOURCE_PATH "$ENV{CPPVRF_SOURCE_PATH}")
 else()
     vcpkg_from_github(
         OUT_SOURCE_PATH SOURCE_PATH
-        REPO Microsoft/libvrf
+        REPO Microsoft/cppvrf
         REF "v${VERSION}"
         SHA512 0 # Set to correct hash once released.
         HEAD_REF main
@@ -22,7 +22,7 @@ vcpkg_cmake_install()
 set(VERSION_MAJOR_MINOR "")
 string(REGEX MATCH "^[0-9]+\\.[0-9]+" VERSION_MAJOR_MINOR "${VERSION}")
 
-vcpkg_cmake_config_fixup(CONFIG_PATH "lib/cmake/libvrf-${VERSION_MAJOR_MINOR}")
+vcpkg_cmake_config_fixup(CONFIG_PATH "lib/cmake/cppvrf-${VERSION_MAJOR_MINOR}")
 
 file(REMOVE_RECURSE
     "${CURRENT_PACKAGES_DIR}/debug/include"

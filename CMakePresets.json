@@ -14,8 +14,8 @@
             "installDir": "${sourceDir}/out/install",
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "LIBVRF_BUILD_TESTS": "ON",
-                "LIBVRF_BUILD_BENCHMARKS": "ON",
+                "CPPVRF_BUILD_TESTS": "ON",
+                "CPPVRF_BUILD_BENCHMARKS": "ON",
                 "CMAKE_CXX_STANDARD": "20"
             }
         },
@@ -36,11 +36,26 @@
             "displayName": "Windows VS 2022 (arm64)",
             "inherits": "base",
             "generator": "Visual Studio 17 2022",
-            "architecture": { "value": "ARM64", "strategy": "set" },
+            "architecture": {
+                "value": "ARM64",
+                "strategy": "set"
+            },
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "arm64-windows",
                 "VCPKG_HOST_TRIPLET": "arm64-windows"
             }
+        },
+        {
+            "name": "win-vs2026-x64",
+            "displayName": "Windows VS 2026 (x64)",
+            "inherits": "win-vs2022-x64",
+            "generator": "Visual Studio 18 2026"
+        },
+        {
+            "name": "win-vs2026-arm64",
+            "displayName": "Windows VS 2026 (arm64)",
+            "inherits": "win-vs2022-arm64",
+            "generator": "Visual Studio 18 2026"
         },
         {
             "name": "linux-debug",
@@ -90,7 +105,6 @@
             "displayName": "Windows VS 2022 (x64) [Debug]",
             "configurePreset": "win-vs2022-x64",
             "configuration": "Debug",
-            "jobs": 0,
             "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
         },
         {
@@ -98,7 +112,6 @@
             "displayName": "Windows VS 2022 (x64) [Release]",
             "configurePreset": "win-vs2022-x64",
             "configuration": "Release",
-            "jobs": 0,
             "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
         },
         {
@@ -106,7 +119,6 @@
             "displayName": "Windows VS 2022 (arm64) [Debug]",
             "configurePreset": "win-vs2022-arm64",
             "configuration": "Debug",
-            "jobs": 0,
             "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
         },
         {
@@ -114,8 +126,55 @@
             "displayName": "Windows VS 2022 (arm64) [Release]",
             "configurePreset": "win-vs2022-arm64",
             "configuration": "Release",
-            "jobs": 0,
-            "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "win-vs2026-x64-debug",
+            "displayName": "Windows VS 2026 (x64) [Debug]",
+            "configurePreset": "win-vs2026-x64",
+            "configuration": "Debug",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "win-vs2026-x64-release",
+            "displayName": "Windows VS 2026 (x64) [Release]",
+            "configurePreset": "win-vs2026-x64",
+            "configuration": "Release",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "win-vs2026-arm64-debug",
+            "displayName": "Windows VS 2026 (arm64) [Debug]",
+            "configurePreset": "win-vs2026-arm64",
+            "configuration": "Debug",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "win-vs2026-arm64-release",
+            "displayName": "Windows VS 2026 (arm64) [Release]",
+            "configurePreset": "win-vs2026-arm64",
+            "configuration": "Release",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
         },
         {
             "name": "linux-debug",

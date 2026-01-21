@@ -6,7 +6,7 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     message(FATAL_ERROR "${CMAKE_CURRENT_LIST_FILE} must not be invoked directly.")
 endif()
 
-set(libvrf_TESTS_FILES ${libvrf_TESTS_FILES}
+set(cppvrf_TESTS_FILES ${cppvrf_TESTS_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/common_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/log_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/test_runner.cpp
@@ -14,5 +14,5 @@ set(libvrf_TESTS_FILES ${libvrf_TESTS_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/vrf_tests.cpp
 )
 
-# Update libvrf_TESTS_FILES variable in the parent scope.
-set(libvrf_TESTS_FILES ${libvrf_TESTS_FILES} PARENT_SCOPE)
+# Update cppvrf_TESTS_FILES variable in the parent scope.
+set(cppvrf_TESTS_FILES ${cppvrf_TESTS_FILES} PARENT_SCOPE)

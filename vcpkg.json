@@ -1,9 +1,9 @@
 {
-  "name": "libvrf",
+  "name": "cppvrf",
   "version": "1.0.2",
   "description": "VRF implementation library in C++20",
   "license": "MIT",
-  "homepage": "https://gitHub.com/microsoft/libvrf",
+  "homepage": "https://gitHub.com/microsoft/cppvrf",
   "dependencies": [
     "openssl"
   ],

@@ -7,7 +7,7 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
 # Add the source files from this directory.
-set(libvrf_SOURCE_FILES ${libvrf_SOURCE_FILES}
+set(cppvrf_SOURCE_FILES ${cppvrf_SOURCE_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/ecpoint.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ecvrf.cpp
     ${CMAKE_CURRENT_LIST_DIR}/params.cpp
@@ -21,8 +21,8 @@ install(
         ${CMAKE_CURRENT_LIST_DIR}/params.h
         ${CMAKE_CURRENT_LIST_DIR}/utils.h
     DESTINATION
-        ${libvrf_INCLUDES_INSTALL_DIR}/vrf/ec
+        ${cppvrf_INCLUDES_INSTALL_DIR}/vrf/ec
 )
 
-# Update libvrf_SOURCE_FILES variable in the parent scope.
-set(libvrf_SOURCE_FILES ${libvrf_SOURCE_FILES} PARENT_SCOPE)
+# Update cppvrf_SOURCE_FILES variable in the parent scope.
+set(cppvrf_SOURCE_FILES ${cppvrf_SOURCE_FILES} PARENT_SCOPE)

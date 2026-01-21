@@ -1,16 +1,16 @@
-# libvrf
+# cppvrf
 
 ## Verifiable Random Functions
 
 A Verifiable Random Function (VRF) is a cryptographic public-key primitive that, from a secret key and a given input, produces a unique pseudorandom output, along with a proof that the output was correctly computed.
 Only the secret key holder can generate the output–proof pair, but anyone with the corresponding public key can verify the proof.
 
-`libvrf` is a C++20 implementation of several VRFs.
+`cppvrf` is a C++20 implementation of several VRFs.
 It comes with a CMake based build system, unit tests, and benchmarks.
 
 ### Build
 
-To build `libvrf`, ensure [vcpkg](https://GitHub.com/Microsoft/vcpkg) is installed (and the environment variable `VCPKG_ROOT` is set).
+To build `cppvrf`, ensure [vcpkg](https://GitHub.com/Microsoft/vcpkg) is installed (and the environment variable `VCPKG_ROOT` is set).
 Then run
 ```bash
 cmake -S . --preset <preset-name>
@@ -21,11 +21,11 @@ The list of available options for `<preset-name>` can be seen by running `cmake 
 The presets will automatically build the test and benchmark suites.
 After building, the executables `vrf_tests[.exe]` and `vrf_benchmarks[.exe]` are available in `out/build/<preset-name>/bin`.
 
-If you do not want to use presets, you can specify `-DLIBVRF_BUILD_TESTS=ON` and `-DLIBVRF_BUILD_BENCHMARKS=ON` to build the test and the benchmark suites.
+If you do not want to use presets, you can specify `-DCPPVRF_BUILD_TESTS=ON` and `-DCPPVRF_BUILD_BENCHMARKS=ON` to build the test and the benchmark suites.
 
 ## Implemented VRFs
 
-`libvrf` implements RSA-FDH VRF and elliptic curve VRF based on [RFC9381](https://datatracker.ietf.org/doc/rfc9381).
+`cppvrf` implements RSA-FDH VRF and elliptic curve VRF based on [RFC9381](https://datatracker.ietf.org/doc/rfc9381).
 It also implements an RSA VRF variant based on RSA-PSS signatures with no nonce.
 
 ### Warning
@@ -36,7 +36,7 @@ For more details and explanation of the security guarantees, see [RFC9381](https
 
 ## Usage
 
-`libvrf` exposes a simple API for creating VRF keypairs, producing proofs, verifying them, and (de)serializing keys and proofs.
+`cppvrf` exposes a simple API for creating VRF keypairs, producing proofs, verifying them, and (de)serializing keys and proofs.
 These functionalities are illustrated in the examples below.
 
 ### 1) Choosing the VRF type and key generation
@@ -150,7 +150,7 @@ This means that these functions can be called also by passing directly (by value
 
 ### 5) Logging
 
-`libvrf` provides a simple logging API (see [vrf/log.h](vrf/log.h)), which can be adapted to work with almost any logging system.
+`cppvrf` provides a simple logging API (see [vrf/log.h](vrf/log.h)), which can be adapted to work with almost any logging system.
 By default, the library simply logs to `std::cout` and `std::cerr` using the logger specified in [vrf/stdout_log.cpp](vrf/stdout_log.cpp).
 To create a custom logger, include [vrf/log.h](vrf/log.h) in your source file and create an instance of `std::shared_ptr<vrf::Logger>` using `vrf::Logger::Create`.
 This function takes as input three arrays of operation handlers (wrapped in `std::function`) for (1) the actual logging operations, (2) manual flush events, and (3) closing the log.

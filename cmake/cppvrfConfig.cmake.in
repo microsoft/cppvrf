@@ -1,0 +1,40 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
+# Created variables:
+# - CPPVRF_FOUND: YES if cppvrf is found and target cppvrf::cppvrf is available.
+# - CPPVRF_INCLUDES_DIR : Directory where the cppvrf include files are.
+# - CPPVRF_CONFIG_DIR : Directory where the cppvrf config files are.
+# - CPPVRF_AVAILABLE_TARGETS : Contains a list of available cppvrf targets.
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Set our variables.
+set(CPPVRF_FOUND NO)
+set_and_check(CPPVRF_INCLUDES_DIR "@PACKAGE_cppvrf_INCLUDES_INSTALL_DIR@")
+set(CPPVRF_CONFIG_DIR "${CMAKE_CURRENT_LIST_DIR}")
+
+# Add the current directory to the module search path to ensure we have
+# access to all of our installed helper modules.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+
+# Initialize CPPVRF_AVAILABLE_TARGETS
+set(CPPVRF_AVAILABLE_TARGETS "")
+
+# Create the targets.
+include("${CMAKE_CURRENT_LIST_DIR}/cppvrfTargets.cmake")
+# Check which targets were created.
+if(TARGET cppvrf::cppvrf)
+    # Find our required dependencies.
+    find_dependency(OpenSSL 3.2 REQUIRED)
+
+    set(CPPVRF_FOUND YES)
+    list(APPEND CPPVRF_AVAILABLE_TARGETS "cppvrf::cppvrf")
+endif()
+
+# Print information about available targets and directories.
+if(CPPVRF_FOUND)
+    message(STATUS "Found cppvrf version \"${cppvrf_VERSION}\".")
+endif()
