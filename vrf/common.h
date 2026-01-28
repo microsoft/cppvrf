@@ -201,4 +201,10 @@ constexpr Curve nid_to_curve(int nid) noexcept
     }
 }
 
+[[nodiscard]]
+EVP_PKEY *decode_private_key_from_der_pkcs8(const char *algorithm_name, std::span<const std::byte> der_pkcs8);
+
+[[nodiscard]]
+std::vector<std::byte> encode_private_key_to_der_pkcs8(const EVP_PKEY *pkey);
+
 } // namespace vrf

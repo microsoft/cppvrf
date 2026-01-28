@@ -92,4 +92,37 @@ std::unique_ptr<PublicKey> VRF::public_key_from_bytes(Type type, std::span<const
     return pk;
 }
 
+std::unique_ptr<SecretKey> VRF::secret_key_from_bytes(Type type, std::span<const std::byte> data)
+{
+    std::unique_ptr<SecretKey> sk = nullptr;
+
+    if (is_rsa_type(type))
+    {
+        sk.reset(new rsa::RSASecretKey{});
+    }
+    else if (is_ec_type(type))
+    {
+        sk.reset(new ec::ECSecretKey{});
+    }
+    else
+    {
+        GetLogger()->warn("VRF type {} is not supported", to_string(type));
+    }
+
+    if (nullptr == sk)
+    {
+        GetLogger()->error("Failed to allocate memory for VRF secret key of type {}", to_string(type));
+        return nullptr;
+    }
+
+    sk->from_bytes(type, data);
+    if (!sk->is_initialized())
+    {
+        GetLogger()->warn("Failed to deserialize VRF secret key for type {}", to_string(type));
+        return nullptr;
+    }
+
+    return sk;
+}
+
 } // namespace vrf

@@ -23,6 +23,8 @@ class RSA_SK_Guard
 
     RSA_SK_Guard(Type type, EVP_PKEY_Guard pkey) : type_{type}, pkey_{std::move(pkey)} {};
 
+    RSA_SK_Guard(Type type, std::span<const std::byte> der_pkcs8);
+
     ~RSA_SK_Guard()
     {
         free();

@@ -129,4 +129,66 @@ EVP_PKEY *evp_pkey_upref(EVP_PKEY *pkey)
     return pkey;
 }
 
+EVP_PKEY *decode_private_key_from_der_pkcs8(const char *algorithm_name, std::span<const std::byte> der_pkcs8)
+{
+    if (nullptr == algorithm_name || der_pkcs8.empty())
+    {
+        GetLogger()->warn("decode_private_key_from_der_pkcs8 called with null algorithm name or empty DER data.");
+        return nullptr;
+    }
+
+    EVP_PKEY *pkey = nullptr;
+    OSSL_DECODER_CTX *dctx =
+        OSSL_DECODER_CTX_new_for_pkey(&pkey, "DER", "PrivateKeyInfo", algorithm_name, EVP_PKEY_KEYPAIR, get_libctx(),
+                                      get_propquery());
+    if (nullptr == dctx)
+    {
+        GetLogger()->error("Failed to create OSSL_DECODER_CTX for loading private key.");
+        return nullptr;
+    }
+
+    const unsigned char *der_data = reinterpret_cast<const unsigned char *>(der_pkcs8.data());
+    std::size_t der_data_len = der_pkcs8.size();
+    if (1 != OSSL_DECODER_from_data(dctx, &der_data, &der_data_len))
+    {
+        GetLogger()->warn("Failed to decode DER PKCS8 into EVP_PKEY using OSSL_DECODER_from_data.");
+        EVP_PKEY_free(pkey);
+        OSSL_DECODER_CTX_free(dctx);
+        return nullptr;
+    }
+
+    OSSL_DECODER_CTX_free(dctx);
+    return pkey;
+}
+
+std::vector<std::byte> encode_private_key_to_der_pkcs8(const EVP_PKEY *pkey)
+{
+    if (nullptr == pkey)
+    {
+        GetLogger()->warn("encode_private_key_to_der_pkcs8 called with null key.");
+        return {};
+    }
+
+    OSSL_ENCODER_CTX *ectx =
+        OSSL_ENCODER_CTX_new_for_pkey(pkey, EVP_PKEY_KEYPAIR, "DER", "PrivateKeyInfo", get_propquery());
+
+    unsigned char *der_data = nullptr;
+    std::size_t der_data_len = 0;
+    if (1 != OSSL_ENCODER_to_data(ectx, &der_data, &der_data_len))
+    {
+        GetLogger()->error("Failed to encode to DER PKCS8 using OSSL_ENCODER_to_data.");
+        OSSL_ENCODER_CTX_free(ectx);
+        return {};
+    }
+
+    const std::byte *der_data_begin = reinterpret_cast<const std::byte *>(der_data);
+    const std::byte *der_data_end = der_data_begin + der_data_len;
+    std::vector<std::byte> der_pkcs8(der_data_begin, der_data_end);
+
+    OPENSSL_free(der_data);
+    OSSL_ENCODER_CTX_free(ectx);
+
+    return der_pkcs8;
+}
+
 } // namespace vrf

@@ -192,6 +192,32 @@ RSA_SK_Guard::RSA_SK_Guard(Type type) : type_{Type::UNKNOWN}, pkey_{nullptr}
     }
 }
 
+RSA_SK_Guard::RSA_SK_Guard(Type type, std::span<const std::byte> der_pkcs8) : type_{Type::UNKNOWN}, pkey_{nullptr}
+{
+    if (!is_rsa_type(type))
+    {
+        GetLogger()->warn("RSA_SK_Guard constructor called with non-RSA VRF type: {}", to_string(type));
+        return;
+    }
+
+    const RSAVRFParams params = get_rsavrf_params(type);
+    EVP_PKEY_Guard pkey{decode_private_key_from_der_pkcs8(params.algorithm_name.data(), der_pkcs8)};
+    if (!pkey.has_value())
+    {
+        GetLogger()->warn("RSA_SK_Guard constructor failed to load EVP_PKEY from provided DER PKCS8.");
+        return;
+    }
+
+    if (!check_rsa_params(type, pkey, true /* check_pk */, true /* check_sk */))
+    {
+        GetLogger()->warn("RSA_SK_Guard constructor found mismatched or invalid RSA parameters in provided DER PKCS8.");
+        return;
+    }
+
+    pkey_ = std::move(pkey);
+    type_ = type;
+}
+
 RSA_SK_Guard RSA_SK_Guard::clone() const
 {
     return {type_, pkey_.clone()};

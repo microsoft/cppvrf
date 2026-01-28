@@ -84,6 +84,11 @@ class ECSecretKey : public SecretKey
     }
 
     [[nodiscard]]
+    std::vector<std::byte> to_bytes() override;
+
+    void from_bytes(Type type, std::span<const std::byte> data) override;
+
+    [[nodiscard]]
     std::unique_ptr<Proof> get_vrf_proof(std::span<const std::byte> in) override;
 
     [[nodiscard]]

@@ -7,6 +7,7 @@
 #include "vrf/guards.h"
 #include "vrf/log.h"
 #include <algorithm>
+#include <openssl/bn.h>
 #include <openssl/core_names.h>
 #include <openssl/ec.h>
 #include <openssl/evp.h>
@@ -910,7 +911,7 @@ std::vector<std::byte> ECPublicKey::to_bytes()
 
     OSSL_PARAM pkey_params[] = {
         OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, const_cast<char *>(curve_sn), 0),
-        OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pk_bytes.data(), pk_size), OSSL_PARAM_END};
+        OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pk_bytes.data(), pk_bytes.size()), OSSL_PARAM_END};
 
     EVP_PKEY_Guard pkey{nullptr};
     if (1 != EVP_PKEY_fromdata(pctx.get(), pkey.free_and_get_addr(), EVP_PKEY_PUBLIC_KEY, pkey_params))
@@ -933,6 +934,166 @@ void ECPublicKey::from_bytes(Type type, std::span<const std::byte> data)
     }
 
     *this = std::move(public_key);
+}
+
+std::vector<std::byte> ECSecretKey::to_bytes()
+{
+    if (!is_initialized())
+    {
+        GetLogger()->warn("ECSecretKey::to_bytes called on invalid ECSecretKey.");
+        return {};
+    }
+
+    BN_CTX_Guard bcg{false};
+    if (!bcg.has_value())
+    {
+        GetLogger()->error("ECSecretKey::to_bytes failed to create BN_CTX.");
+        return {};
+    }
+
+    const ECVRFParams params = get_ecvrf_params(get_type());
+
+    // Public key bytes.
+    point_to_bytes_ptr_t point_to_bytes = get_point_to_bytes_method(PointToBytesMethod::SEC1_COMPRESSED);
+    std::size_t pk_size = point_to_bytes(group_, pk_.get(), bcg, {});
+    std::vector<std::byte> pk_bytes(pk_size);
+    if (0 == pk_size || pk_size != point_to_bytes(group_, pk_.get(), bcg, pk_bytes))
+    {
+        GetLogger()->error("ECSecretKey::to_bytes failed to convert public key point to bytes.");
+        return {};
+    }
+
+    // Private key bytes.
+    const BIGNUM *sk_bn = sk_.get().get();
+    if (nullptr == sk_bn)
+    {
+        GetLogger()->error("ECSecretKey::to_bytes failed to access private key scalar.");
+        return {};
+    }
+
+    const std::size_t sk_size = static_cast<std::size_t>(BN_num_bytes(sk_bn));
+    std::vector<std::byte> sk_bytes(sk_size);
+    if (0 == sk_size ||
+        BN_bn2binpad(sk_bn, reinterpret_cast<unsigned char *>(sk_bytes.data()), sk_size) !=
+            static_cast<int>(sk_size))
+    {
+        GetLogger()->error("ECSecretKey::to_bytes failed to convert private key scalar to bytes.");
+        return {};
+    }
+
+    EVP_PKEY_CTX_Guard pctx{EVP_PKEY_CTX_new_from_name(get_libctx(), params.algorithm_name.data(), get_propquery())};
+    if (!pctx.has_value())
+    {
+        GetLogger()->error("ECSecretKey::to_bytes failed to create EVP_PKEY_CTX.");
+        return {};
+    }
+
+    if (1 != EVP_PKEY_fromdata_init(pctx.get()))
+    {
+        GetLogger()->error("ECSecretKey::to_bytes failed to initialize EVP_PKEY from data.");
+        return {};
+    }
+
+    const int nid = curve_to_nid(params.curve);
+    const char *curve_sn = OBJ_nid2sn(nid);
+    if (nullptr == curve_sn)
+    {
+        GetLogger()->error("ECSecretKey::to_bytes failed to get curve short name from NID: {}", nid);
+        return {};
+    }
+
+    OSSL_PARAM pkey_params[] = {
+        OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, const_cast<char *>(curve_sn), 0),
+        OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pk_bytes.data(), pk_bytes.size()),
+        OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PRIV_KEY, reinterpret_cast<unsigned char *>(sk_bytes.data()),
+                                sk_bytes.size()),
+        OSSL_PARAM_END};
+
+    EVP_PKEY_Guard pkey{nullptr};
+    if (1 != EVP_PKEY_fromdata(pctx.get(), pkey.free_and_get_addr(), EVP_PKEY_KEYPAIR, pkey_params))
+    {
+        GetLogger()->error("ECSecretKey::to_bytes failed to create EVP_PKEY from data.");
+        return {};
+    }
+
+    std::vector<std::byte> der_pkcs8 = encode_private_key_to_der_pkcs8(pkey.get());
+    if (der_pkcs8.empty())
+    {
+        GetLogger()->error("ECSecretKey::to_bytes failed to encode EVP_PKEY to DER PKCS8.");
+    }
+
+    return der_pkcs8;
+}
+
+void ECSecretKey::from_bytes(Type type, std::span<const std::byte> data)
+{
+    if (!is_ec_type(type))
+    {
+        GetLogger()->warn("ECSecretKey::from_bytes called with non-EC VRF type: {}", to_string(type));
+        return;
+    }
+
+    const ECVRFParams params = get_ecvrf_params(type);
+    if (params.algorithm_name.empty())
+    {
+        GetLogger()->warn("ECSecretKey::from_bytes called with non-EC VRF type: {}", to_string(type));
+        return;
+    }
+
+    EVP_PKEY_Guard pkey{decode_private_key_from_der_pkcs8(params.algorithm_name.data(), data)};
+    if (!pkey.has_value())
+    {
+        GetLogger()->warn("ECSecretKey::from_bytes failed to decode DER PKCS8 for VRF type: {}", to_string(type));
+        return;
+    }
+
+    // Extract and verify curve name.
+    std::size_t group_name_size = 0;
+    if (1 != EVP_PKEY_get_utf8_string_param(pkey.get(), OSSL_PKEY_PARAM_GROUP_NAME, nullptr, 0, &group_name_size))
+    {
+        GetLogger()->error("ECSecretKey::from_bytes failed to get size of OSSL_PKEY_PARAM_GROUP_NAME.");
+        return;
+    }
+
+    std::vector<char> group_name(group_name_size + 1);
+    if (1 != EVP_PKEY_get_utf8_string_param(pkey.get(), OSSL_PKEY_PARAM_GROUP_NAME, group_name.data(),
+                                            group_name.size(), &group_name_size) ||
+        group_name.size() != group_name_size + 1)
+    {
+        GetLogger()->error("ECSecretKey::from_bytes failed to get OSSL_PKEY_PARAM_GROUP_NAME.");
+        return;
+    }
+
+    const int group_nid = OBJ_txt2nid(group_name.data());
+    if (group_nid == NID_undef || group_nid != curve_to_nid(params.curve))
+    {
+        GetLogger()->warn("ECSecretKey::from_bytes called with mismatched curve for VRF type: {}", to_string(type));
+        return;
+    }
+
+    BIGNUM_Guard sk_bn{};
+    if (1 != EVP_PKEY_get_bn_param(pkey.get(), OSSL_PKEY_PARAM_PRIV_KEY, sk_bn.free_and_get_addr(true)))
+    {
+        GetLogger()->error("ECSecretKey::from_bytes failed to extract OSSL_PKEY_PARAM_PRIV_KEY.");
+        return;
+    }
+
+    ScalarType sk{std::move(sk_bn)};
+    if (!sk.has_value())
+    {
+        GetLogger()->error("ECSecretKey::from_bytes failed to create ScalarType from private key.");
+        return;
+    }
+
+    ECSecretKey secret_key{type, std::move(sk)};
+    if (!secret_key.is_initialized())
+    {
+        GetLogger()->warn("ECSecretKey::from_bytes called with invalid private key DER for VRF type: {}",
+                          to_string(type));
+        return;
+    }
+
+    *this = std::move(secret_key);
 }
 
 } // namespace vrf::ec

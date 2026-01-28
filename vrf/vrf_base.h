@@ -176,9 +176,9 @@ class PublicKey;
 /**
  * Abstract base class representing a VRF secret key object. The secret key can be used to
  * generate VRF proofs for given inputs, and it can also provide the corresponding public key.
- * The secret key can be cloned but cannot be serialized or deserialized.
+ * The secret key can be cloned and serialized/deserialized.
  */
-class SecretKey : public VRFObject<SecretKey>, public Clonable<SecretKey>
+class SecretKey : public VRFObject<SecretKey>, public Clonable<SecretKey>, public Serializable
 {
   public:
     virtual ~SecretKey() = default;

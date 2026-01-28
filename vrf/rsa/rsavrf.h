@@ -90,6 +90,11 @@ class RSASecretKey : public SecretKey
     }
 
     [[nodiscard]]
+    std::vector<std::byte> to_bytes() override;
+
+    void from_bytes(Type type, std::span<const std::byte> data) override;
+
+    [[nodiscard]]
     std::unique_ptr<SecretKey> clone() const override
     {
         return std::unique_ptr<RSASecretKey>(new RSASecretKey(*this));
