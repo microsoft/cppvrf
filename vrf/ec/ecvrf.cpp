@@ -458,7 +458,6 @@ ECSecretKey &ECSecretKey::operator=(ECSecretKey &&rhs) noexcept
         rhs.set_type(type);
 
         using std::swap;
-        set_type(rhs.get_type());
         swap(sk_, rhs.sk_);
         swap(pk_, rhs.pk_);
         swap(group_, rhs.group_);
