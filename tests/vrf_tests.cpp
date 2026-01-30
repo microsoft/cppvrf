@@ -385,9 +385,9 @@ TEST(VRFTest, InputFlexibility)
     }
 }
 
-TEST(VRFTest, RSASecretKeyRoundTrip)
+TEST_P(VRFTest, SecretKeyRoundTrip)
 {
-    vrf::Type type = vrf::Type::RSA_FDH_VRF_RSA2048_SHA256;
+    auto type = GetParam();
     auto sk = vrf::VRF::Create(type);
     ASSERT_NE(sk, nullptr);
     ASSERT_TRUE(sk->is_initialized());
@@ -413,37 +413,7 @@ TEST(VRFTest, RSASecretKeyRoundTrip)
     ASSERT_FALSE(hash.empty());
 }
 
-TEST(VRFTest, ECSecretKeyRoundTrip)
-{
-    vrf::Type type = vrf::Type::EC_VRF_P256_SHA256_TAI;
-    auto sk = vrf::VRF::Create(type);
-    ASSERT_NE(sk, nullptr);
-    ASSERT_TRUE(sk->is_initialized());
-
-    std::vector<std::byte> sk_bytes = sk->to_bytes();
-    ASSERT_FALSE(sk_bytes.empty());
-
-    auto sk_roundtrip = vrf::VRF::secret_key_from_bytes(type, sk_bytes);
-    ASSERT_NE(sk_roundtrip, nullptr);
-    std::vector<std::byte> sk_roundtrip_bytes = sk_roundtrip->to_bytes();
-
-    ASSERT_TRUE(sk_roundtrip->is_initialized());
-    ASSERT_EQ(sk_roundtrip->get_type(), type);
-    ASSERT_EQ(sk_bytes, sk_roundtrip_bytes);
-
-    std::vector<std::byte> data = random_bytes(32);
-    auto proof = sk_roundtrip->get_vrf_proof(data);
-    ASSERT_NE(proof, nullptr);
-    ASSERT_TRUE(proof->is_initialized());
-
-    auto pk = sk_roundtrip->get_public_key();
-    ASSERT_NE(pk, nullptr);
-    auto [success, hash] = pk->verify_vrf_proof(data, proof);
-    ASSERT_TRUE(success);
-    ASSERT_FALSE(hash.empty());
-}
-
-TEST_P(VRFTest, SerializeDeserialize_VerifyCross)
+TEST_P(VRFTest, SKSerializationVerifyCross)
 {
     const auto type = GetParam();
 
@@ -494,10 +464,6 @@ INSTANTIATE_TEST_SUITE_P(RSAVRFTypes, VRFTest,
                          testing::PrintToStringParamName());
 
 INSTANTIATE_TEST_SUITE_P(ECVRFTypes, VRFTest, testing::Values(vrf::Type::EC_VRF_P256_SHA256_TAI),
-                         testing::PrintToStringParamName());
-
-INSTANTIATE_TEST_SUITE_P(ECAndRSA, VRFTest,
-                         testing::Values(vrf::Type::EC_VRF_P256_SHA256_TAI, vrf::Type::RSA_FDH_VRF_RSA2048_SHA256),
                          testing::PrintToStringParamName());
 
 class RSATestVectors : public testing::TestWithParam<vrf::Type>

@@ -794,6 +794,44 @@ std::unique_ptr<PublicKey> RSASecretKey::get_public_key()
     return public_key;
 }
 
+std::vector<std::byte> RSASecretKey::to_bytes()
+{
+    if (!is_initialized())
+    {
+        GetLogger()->warn("RSASecretKey::to_bytes called on invalid RSASecretKey.");
+        return {};
+    }
+
+    std::vector<std::byte> der_pkcs8 = encode_private_key_to_der_pkcs8(sk_guard_.get());
+    if (der_pkcs8.empty())
+    {
+        GetLogger()->error("RSASecretKey::to_bytes failed to encode EVP_PKEY to DER PKCS8.");
+    }
+
+    return der_pkcs8;
+}
+
+void RSASecretKey::from_bytes(Type type, std::span<const std::byte> data)
+{
+    RSA_SK_Guard sk_guard{type, data};
+    if (!sk_guard.has_value())
+    {
+        GetLogger()->warn("RSASecretKey::from_bytes called with invalid private key DER for VRF type: {}",
+                          to_string(type));
+        return;
+    }
+
+    RSASecretKey secret_key{std::move(sk_guard)};
+    if (!secret_key.is_initialized())
+    {
+        GetLogger()->warn("RSASecretKey::from_bytes called with invalid private key DER for VRF type: {}",
+                          to_string(type));
+        return;
+    }
+
+    *this = std::move(secret_key);
+}
+
 RSAPublicKey::RSAPublicKey(const RSAPublicKey &source) : PublicKey{Type::UNKNOWN}, pk_guard_{}, mgf1_salt_{}
 {
     RSA_PK_Guard pk_guard_copy = source.pk_guard_.clone();
@@ -953,44 +991,6 @@ std::pair<bool, std::vector<std::byte>> RSAPublicKey::verify_vrf_proof(std::span
     }
 
     return {true, rsa_proof->get_vrf_value()};
-}
-
-std::vector<std::byte> RSASecretKey::to_bytes()
-{
-    if (!is_initialized())
-    {
-        GetLogger()->warn("RSASecretKey::to_bytes called on invalid RSASecretKey.");
-        return {};
-    }
-
-    std::vector<std::byte> der_pkcs8 = encode_private_key_to_der_pkcs8(sk_guard_.get());
-    if (der_pkcs8.empty())
-    {
-        GetLogger()->error("RSASecretKey::to_bytes failed to encode EVP_PKEY to DER PKCS8.");
-    }
-
-    return der_pkcs8;
-}
-
-void RSASecretKey::from_bytes(Type type, std::span<const std::byte> data)
-{
-    RSA_SK_Guard sk_guard{type, data};
-    if (!sk_guard.has_value())
-    {
-        GetLogger()->warn("RSASecretKey::from_bytes called with invalid private key DER for VRF type: {}",
-                          to_string(type));
-        return;
-    }
-
-    RSASecretKey secret_key{std::move(sk_guard)};
-    if (!secret_key.is_initialized())
-    {
-        GetLogger()->warn("RSASecretKey::from_bytes called with invalid private key DER for VRF type: {}",
-                          to_string(type));
-        return;
-    }
-
-    *this = std::move(secret_key);
 }
 
 } // namespace vrf::rsa
