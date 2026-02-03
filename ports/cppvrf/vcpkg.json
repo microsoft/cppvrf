@@ -1,6 +1,6 @@
 {
   "name": "cppvrf",
-  "version": "1.0.2",
+  "version": "1.2.0",
   "description": "VRF implementation library in C++20",
   "license": "MIT",
   "homepage": "https://github.com/microsoft/cppvrf",
@@ -14,7 +14,5 @@
       "name": "vcpkg-cmake-config",
       "host": true
     }
-  ],
-  "supports": "static",
-  "features": {}
+  ]
 }
