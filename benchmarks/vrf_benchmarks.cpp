@@ -116,7 +116,7 @@ static void BM_VRF_ProofFromBytes(benchmark::State &state)
     auto proof_bytes = proof->to_bytes();
     for (auto _ : state)
     {
-        auto proof_from_bytes = vrf::VRF::proof_from_bytes(type, proof_bytes);
+        auto proof_from_bytes = vrf::VRF::ProofFromBytes(type, proof_bytes);
         benchmark::DoNotOptimize(proof_from_bytes);
     }
     state.SetLabel(std::string{vrf::to_string(type)});
@@ -169,13 +169,63 @@ static void BM_VRF_PublicKeyFromBytes(benchmark::State &state)
     auto der_spki = pk->to_bytes();
     for (auto _ : state)
     {
-        auto public_key_from_string = vrf::VRF::public_key_from_bytes(type, der_spki);
+        auto public_key_from_string = vrf::VRF::PublicKeyFromBytes(type, der_spki);
         benchmark::DoNotOptimize(public_key_from_string);
     }
     state.SetLabel(std::string{vrf::to_string(type)});
 }
 
 BENCHMARK(BM_VRF_PublicKeyFromBytes)
+    ->Unit(benchmark::kMicrosecond)
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_FDH_VRF_RSA2048_SHA256))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_FDH_VRF_RSA3072_SHA256))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_FDH_VRF_RSA4096_SHA384))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_FDH_VRF_RSA4096_SHA512))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_PSS_NOSALT_VRF_RSA2048_SHA256))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_PSS_NOSALT_VRF_RSA3072_SHA256))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA384))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA512))
+    ->Arg(static_cast<std::size_t>(vrf::Type::EC_VRF_P256_SHA256_TAI));
+
+static void BM_VRF_SecretKeyToSecureBytes(benchmark::State &state)
+{
+    vrf::Type type = static_cast<vrf::Type>(state.range(0));
+    auto sk = vrf::VRF::Create(type);
+    for (auto _ : state)
+    {
+        auto sk_bytes = sk->to_secure_bytes();
+        benchmark::DoNotOptimize(sk_bytes);
+    }
+    state.SetLabel(std::string{vrf::to_string(type)});
+}
+
+BENCHMARK(BM_VRF_SecretKeyToSecureBytes)
+    ->Unit(benchmark::kMicrosecond)
+    ->Iterations(1000)
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_FDH_VRF_RSA2048_SHA256))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_FDH_VRF_RSA3072_SHA256))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_FDH_VRF_RSA4096_SHA384))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_FDH_VRF_RSA4096_SHA512))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_PSS_NOSALT_VRF_RSA2048_SHA256))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_PSS_NOSALT_VRF_RSA3072_SHA256))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA384))
+    ->Arg(static_cast<std::size_t>(vrf::Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA512))
+    ->Arg(static_cast<std::size_t>(vrf::Type::EC_VRF_P256_SHA256_TAI));
+
+static void BM_VRF_SecretKeyFromBytes(benchmark::State &state)
+{
+    vrf::Type type = static_cast<vrf::Type>(state.range(0));
+    auto sk = vrf::VRF::Create(type);
+    auto sk_bytes = sk->to_secure_bytes();
+    for (auto _ : state)
+    {
+        auto sk_from_bytes = vrf::VRF::SecretKeyFromBytes(type, sk_bytes);
+        benchmark::DoNotOptimize(sk_from_bytes);
+    }
+    state.SetLabel(std::string{vrf::to_string(type)});
+}
+
+BENCHMARK(BM_VRF_SecretKeyFromBytes)
     ->Unit(benchmark::kMicrosecond)
     ->Arg(static_cast<std::size_t>(vrf::Type::RSA_FDH_VRF_RSA2048_SHA256))
     ->Arg(static_cast<std::size_t>(vrf::Type::RSA_FDH_VRF_RSA3072_SHA256))

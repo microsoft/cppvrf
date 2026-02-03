@@ -618,29 +618,48 @@ std::unique_ptr<Proof> ECSecretKey::get_vrf_proof(std::span<const std::byte> in)
 
 std::vector<std::byte> ECSecretKey::to_bytes()
 {
+    GetLogger()->error("ECSecretKey::to_bytes is disabled; use to_secure_bytes() instead.");
+    return {};
+}
+
+SecureBuf ECSecretKey::to_secure_bytes()
+{
     if (!is_initialized())
     {
-        GetLogger()->warn("ECSecretKey::to_bytes called on invalid ECSecretKey.");
+        GetLogger()->warn("ECSecretKey::to_secure_bytes called on invalid ECSecretKey.");
+        return {};
+    }
+
+    const ECVRFParams params = get_ecvrf_params(get_type());
+    if (params.algorithm_name.empty())
+    {
+        GetLogger()->error("ECSecretKey::to_secure_bytes failed to get ECVRF params.");
         return {};
     }
 
     const BIGNUM *sk_bn = sk_.get().get();
     if (nullptr == sk_bn)
     {
-        GetLogger()->error("ECSecretKey::to_bytes failed to access private key scalar.");
+        GetLogger()->error("ECSecretKey::to_secure_bytes failed to access secret key scalar.");
         return {};
     }
 
-    const std::size_t sk_size = static_cast<std::size_t>(BN_num_bytes(sk_bn));
-    std::vector<std::byte> sk_bytes(sk_size);
-    const int written = BN_bn2bin(sk_bn, reinterpret_cast<unsigned char *>(sk_bytes.data()));
-    if (0 == sk_size || written != static_cast<int>(sk_size))
+    SecureBuf buf{params.q_len};
+    if (!buf.has_value())
     {
-        GetLogger()->error("ECSecretKey::to_bytes failed to convert private key scalar to bytes.");
+        GetLogger()->error("ECSecretKey::to_secure_bytes failed to allocate secure buffer.");
         return {};
     }
 
-    return sk_bytes;
+    const int written = BN_bn2binpad(sk_bn, reinterpret_cast<unsigned char *>(buf.get()),
+                                     static_cast<int>(params.q_len));
+    if (written != static_cast<int>(params.q_len))
+    {
+        GetLogger()->error("ECSecretKey::to_secure_bytes failed to convert secret key scalar to bytes.");
+        return {};
+    }
+
+    return buf;
 }
 
 void ECSecretKey::from_bytes(Type type, std::span<const std::byte> data)
@@ -658,7 +677,7 @@ void ECSecretKey::from_bytes(Type type, std::span<const std::byte> data)
         return;
     }
 
-    if (data.empty() || !std::in_range<int>(data.size()))
+    if (data.empty() || !std::in_range<int>(data.size()) || data.size() != params.q_len)
     {
         GetLogger()->warn("ECSecretKey::from_bytes called with invalid scalar size for VRF type: {}", to_string(type));
         return;
@@ -676,14 +695,14 @@ void ECSecretKey::from_bytes(Type type, std::span<const std::byte> data)
     ScalarType sk{std::move(sk_bn)};
     if (!sk.has_value())
     {
-        GetLogger()->error("ECSecretKey::from_bytes failed to create ScalarType from private key.");
+        GetLogger()->error("ECSecretKey::from_bytes failed to create ScalarType from secret key.");
         return;
     }
 
     ECSecretKey secret_key{type, std::move(sk)};
     if (!secret_key.is_initialized())
     {
-        GetLogger()->warn("ECSecretKey::from_bytes called with invalid private key bytes for VRF type: {}",
+        GetLogger()->warn("ECSecretKey::from_bytes called with invalid secret key bytes for VRF type: {}",
                           to_string(type));
         return;
     }

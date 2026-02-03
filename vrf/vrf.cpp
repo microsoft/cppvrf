@@ -26,7 +26,7 @@ std::unique_ptr<SecretKey> VRF::Create(Type type)
     }
 }
 
-std::unique_ptr<Proof> VRF::proof_from_bytes(Type type, std::span<const std::byte> data)
+std::unique_ptr<Proof> VRF::ProofFromBytes(Type type, std::span<const std::byte> data)
 {
     std::unique_ptr<Proof> proof = nullptr;
 
@@ -59,7 +59,7 @@ std::unique_ptr<Proof> VRF::proof_from_bytes(Type type, std::span<const std::byt
     return proof;
 }
 
-std::unique_ptr<PublicKey> VRF::public_key_from_bytes(Type type, std::span<const std::byte> data)
+std::unique_ptr<PublicKey> VRF::PublicKeyFromBytes(Type type, std::span<const std::byte> data)
 {
     std::unique_ptr<PublicKey> pk = nullptr;
 
@@ -92,7 +92,7 @@ std::unique_ptr<PublicKey> VRF::public_key_from_bytes(Type type, std::span<const
     return pk;
 }
 
-std::unique_ptr<SecretKey> VRF::secret_key_from_bytes(Type type, std::span<const std::byte> data)
+std::unique_ptr<SecretKey> VRF::SecretKeyFromBytes(Type type, std::span<const std::byte> data)
 {
     std::unique_ptr<SecretKey> sk = nullptr;
 

@@ -7,6 +7,7 @@ Only the secret key holder can generate the output–proof pair, but anyone with
 
 `cppvrf` is a C++20 implementation of several VRFs.
 It comes with a CMake based build system, unit tests, and benchmarks.
+The easiest way to include `cppvrf` in your CMake project is using [vcpkg](https://GitHub.com/Microsoft/vcpkg).
 
 ### Build
 
@@ -79,7 +80,6 @@ if (!pk || !pk->is_initialized()) {
 }
 ```
 
-The secret key cannot be serialized, although we may add this capability in the future.
 The public key can be serialized (to a DER-encoded SPKI struct) and deserialized as follows:
 ```cpp
 // To serialize
@@ -93,6 +93,22 @@ if (der_spki.empty()) {
 // will return false.
 std::unique_ptr<vrf::PublicKey> pk2 = vrf::VRF::public_key_from_bytes(type, der_spki);
 if (!pk2 || !pk2->is_initialized()) {
+    throw std::runtime_error("Deserialization failed");
+}
+```
+
+The secret key can be serialized to a `vrf::SecureBuf`, which uses OpenSSL secure memory that is zeroed on destruction.
+For EC-based VRFs, the serialized form is the raw scalar bytes; for RSA-based VRFs, it is a DER-encoded PKCS#8 structure.
+```cpp
+// To serialize
+vrf::SecureBuf sk_bytes = sk->to_secure_bytes();
+if (!sk_bytes.has_value()) {
+    throw std::runtime_error("Failed to serialize secret key");
+}
+
+// To deserialize, the caller is responsible for providing the correct type as input.
+std::unique_ptr<vrf::SecretKey> sk2 = vrf::VRF::SecretKeyFromBytes(type, sk_bytes);
+if (!sk2 || !sk2->is_initialized()) {
     throw std::runtime_error("Deserialization failed");
 }
 ```

@@ -78,7 +78,7 @@ class RSA_SK_Guard
     }
 
   private:
-    static EVP_PKEY_Guard generate_rsa_key(Type type);
+    static EVP_PKEY_Guard GenerateRSAKey(Type type);
 
     Type type_ = Type::UNKNOWN;
 

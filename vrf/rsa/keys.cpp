@@ -140,7 +140,7 @@ RSA_SK_Guard &RSA_SK_Guard::operator=(RSA_SK_Guard &&rhs) noexcept
     return *this;
 }
 
-EVP_PKEY_Guard RSA_SK_Guard::generate_rsa_key(Type type)
+EVP_PKEY_Guard RSA_SK_Guard::GenerateRSAKey(Type type)
 {
     if (!is_rsa_type(type))
     {
@@ -180,7 +180,7 @@ EVP_PKEY_Guard RSA_SK_Guard::generate_rsa_key(Type type)
 
 RSA_SK_Guard::RSA_SK_Guard(Type type) : type_{Type::UNKNOWN}, pkey_{nullptr}
 {
-    EVP_PKEY_Guard pkey{generate_rsa_key(type)};
+    EVP_PKEY_Guard pkey{GenerateRSAKey(type)};
     if (!pkey.has_value())
     {
         GetLogger()->error("RSA_PKEY_Guard constructor failed to generate RSA key.");
@@ -201,16 +201,18 @@ RSA_SK_Guard::RSA_SK_Guard(Type type, std::span<const std::byte> der_pkcs8) : ty
     }
 
     const RSAVRFParams params = get_rsavrf_params(type);
-    EVP_PKEY_Guard pkey{decode_private_key_from_der_pkcs8(params.algorithm_name.data(), der_pkcs8)};
+
+    EVP_PKEY_Guard pkey{decode_secret_key_from_der_pkcs8(params.algorithm_name.data(), der_pkcs8)};
     if (!pkey.has_value())
     {
-        GetLogger()->warn("RSA_SK_Guard constructor failed to load EVP_PKEY from provided DER PKCS8.");
+        GetLogger()->warn("RSA_SK_Guard constructor failed to load EVP_PKEY from provided DER PKCS#8.");
         return;
     }
 
     if (!check_rsa_params(type, pkey, true /* check_pk */, true /* check_sk */))
     {
-        GetLogger()->warn("RSA_SK_Guard constructor found mismatched or invalid RSA parameters in provided DER PKCS8.");
+        GetLogger()->warn(
+            "RSA_SK_Guard constructor found mismatched or invalid RSA parameters in provided DER PKCS#8.");
         return;
     }
 

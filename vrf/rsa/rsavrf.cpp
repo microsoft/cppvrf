@@ -796,19 +796,25 @@ std::unique_ptr<PublicKey> RSASecretKey::get_public_key()
 
 std::vector<std::byte> RSASecretKey::to_bytes()
 {
+    GetLogger()->error("RSASecretKey::to_bytes is disabled; use to_secure_bytes() instead.");
+    return {};
+}
+
+SecureBuf RSASecretKey::to_secure_bytes()
+{
     if (!is_initialized())
     {
-        GetLogger()->warn("RSASecretKey::to_bytes called on invalid RSASecretKey.");
+        GetLogger()->warn("RSASecretKey::to_secure_bytes called on invalid RSASecretKey.");
         return {};
     }
 
-    std::vector<std::byte> der_pkcs8 = encode_private_key_to_der_pkcs8(sk_guard_.get());
-    if (der_pkcs8.empty())
+    SecureBuf buf = encode_secret_key_to_der_pkcs8(sk_guard_.get());
+    if (!buf.has_value())
     {
-        GetLogger()->error("RSASecretKey::to_bytes failed to encode EVP_PKEY to DER PKCS8.");
+        GetLogger()->error("RSASecretKey::to_secure_bytes failed to encode EVP_PKEY to DER PKCS#8.");
     }
 
-    return der_pkcs8;
+    return buf;
 }
 
 void RSASecretKey::from_bytes(Type type, std::span<const std::byte> data)

@@ -86,6 +86,9 @@ class ECSecretKey : public SecretKey
     [[nodiscard]]
     std::vector<std::byte> to_bytes() override;
 
+    [[nodiscard]]
+    SecureBuf to_secure_bytes() override;
+
     void from_bytes(Type type, std::span<const std::byte> data) override;
 
     [[nodiscard]]

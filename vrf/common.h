@@ -3,13 +3,13 @@
 
 #pragma once
 
+#include "vrf/secure_buf.h"
 #include <cstddef>
 #include <limits>
 #include <openssl/evp.h>
 #include <openssl/types.h>
 #include <optional>
 #include <span>
-#include <utility>
 #include <vector>
 
 namespace vrf
@@ -21,76 +21,17 @@ OSSL_LIB_CTX *get_libctx();
 [[nodiscard]]
 const char *get_propquery();
 
-class SecureBuf
-{
-  public:
-    SecureBuf() = default;
-
-    explicit SecureBuf(std::size_t size);
-
-    SecureBuf(const SecureBuf &) = delete;
-
-    SecureBuf &operator=(const SecureBuf &) = delete;
-
-    SecureBuf &operator=(SecureBuf &&rhs) noexcept;
-
-    SecureBuf(SecureBuf &&other) noexcept : size_(0), buf_(nullptr)
-    {
-        *this = std::move(other);
-    }
-
-    ~SecureBuf();
-
-    bool has_value() const noexcept
-    {
-        return nullptr != buf_ && size_ > 0;
-    }
-
-    [[nodiscard]]
-    operator std::span<std::byte>() & noexcept
-    {
-        return {buf_, size_};
-    }
-    [[nodiscard]]
-    operator std::span<const std::byte>() const & noexcept
-    {
-        return {buf_, size_};
-    }
-
-    // No span-conversion on temporaries!
-    operator std::span<std::byte>() && = delete;
-
-    operator std::span<const std::byte>() && = delete;
-
-    [[nodiscard]]
-    std::size_t size() const noexcept
-    {
-        return size_;
-    }
-
-    [[nodiscard]]
-    std::byte *get() noexcept
-    {
-        return buf_;
-    }
-
-    [[nodiscard]]
-    const std::byte *get() const noexcept
-    {
-        return buf_;
-    }
-
-  private:
-    std::size_t size_ = 0;
-
-    std::byte *buf_ = nullptr;
-};
-
 [[nodiscard]]
 EVP_PKEY *decode_public_key_from_der_spki(const char *algorithm_name, std::span<const std::byte> der_spki);
 
 [[nodiscard]]
 std::vector<std::byte> encode_public_key_to_der_spki(const EVP_PKEY *pkey);
+
+[[nodiscard]]
+EVP_PKEY *decode_secret_key_from_der_pkcs8(const char *algorithm_name, std::span<const std::byte> der_pkcs8);
+
+[[nodiscard]]
+SecureBuf encode_secret_key_to_der_pkcs8(const EVP_PKEY *pkey);
 
 EVP_PKEY *evp_pkey_upref(EVP_PKEY *pkey);
 
@@ -200,11 +141,5 @@ constexpr Curve nid_to_curve(int nid) noexcept
         return Curve::UNDEFINED;
     }
 }
-
-[[nodiscard]]
-EVP_PKEY *decode_private_key_from_der_pkcs8(const char *algorithm_name, std::span<const std::byte> der_pkcs8);
-
-[[nodiscard]]
-std::vector<std::byte> encode_private_key_to_der_pkcs8(const EVP_PKEY *pkey);
 
 } // namespace vrf

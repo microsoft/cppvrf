@@ -29,7 +29,7 @@ class VRF
      * pointer to the deserialized proof object, or nullptr if deserialization fails.
      */
     [[nodiscard]]
-    static std::unique_ptr<Proof> proof_from_bytes(Type type, std::span<const std::byte> data);
+    static std::unique_ptr<Proof> ProofFromBytes(Type type, std::span<const std::byte> data);
 
     /**
      * Deserializes a VRF proof from a span of bytes for the specified VRF type. Returns a unique
@@ -38,9 +38,9 @@ class VRF
     template <ByteLike T, std::size_t N = std::dynamic_extent>
         requires(!std::same_as<std::remove_cv_t<T>, std::byte>)
     [[nodiscard]]
-    static std::unique_ptr<Proof> proof_from_bytes(Type type, std::span<const T, N> data)
+    static std::unique_ptr<Proof> ProofFromBytes(Type type, std::span<const T, N> data)
     {
-        return proof_from_bytes(type, std::as_bytes(data));
+        return ProofFromBytes(type, std::as_bytes(data));
     }
 
     /**
@@ -49,9 +49,9 @@ class VRF
      */
     template <ByteRange R>
     [[nodiscard]]
-    static std::unique_ptr<Proof> proof_from_bytes(Type type, R &&data)
+    static std::unique_ptr<Proof> ProofFromBytes(Type type, R &&data)
     {
-        return proof_from_bytes(type, byte_range_to_span(data));
+        return ProofFromBytes(type, byte_range_to_span(data));
     }
 
     /**
@@ -59,7 +59,7 @@ class VRF
      * pointer to the deserialized public key object, or nullptr if deserialization fails.
      */
     [[nodiscard]]
-    static std::unique_ptr<PublicKey> public_key_from_bytes(Type type, std::span<const std::byte> data);
+    static std::unique_ptr<PublicKey> PublicKeyFromBytes(Type type, std::span<const std::byte> data);
 
     /**
      * Deserializes a VRF public key from a span of bytes for the specified VRF type. Returns a unique
@@ -68,9 +68,9 @@ class VRF
     template <ByteLike T, std::size_t N = std::dynamic_extent>
         requires(!std::same_as<std::remove_cv_t<T>, std::byte>)
     [[nodiscard]]
-    static std::unique_ptr<PublicKey> public_key_from_bytes(Type type, std::span<const T, N> data)
+    static std::unique_ptr<PublicKey> PublicKeyFromBytes(Type type, std::span<const T, N> data)
     {
-        return public_key_from_bytes(type, std::as_bytes(data));
+        return PublicKeyFromBytes(type, std::as_bytes(data));
     }
 
     /**
@@ -79,9 +79,9 @@ class VRF
      */
     template <ByteRange R>
     [[nodiscard]]
-    static std::unique_ptr<PublicKey> public_key_from_bytes(Type type, R &&data)
+    static std::unique_ptr<PublicKey> PublicKeyFromBytes(Type type, R &&data)
     {
-        return public_key_from_bytes(type, byte_range_to_span(data));
+        return PublicKeyFromBytes(type, byte_range_to_span(data));
     }
 
     /**
@@ -89,7 +89,7 @@ class VRF
      * pointer to the deserialized secret key object, or nullptr if deserialization fails.
      */
     [[nodiscard]]
-    static std::unique_ptr<SecretKey> secret_key_from_bytes(Type type, std::span<const std::byte> data);
+    static std::unique_ptr<SecretKey> SecretKeyFromBytes(Type type, std::span<const std::byte> data);
 
     /**
      * Deserializes a VRF secret key from a span of bytes for the specified VRF type. Returns a unique
@@ -98,9 +98,9 @@ class VRF
     template <ByteLike T, std::size_t N = std::dynamic_extent>
         requires(!std::same_as<std::remove_cv_t<T>, std::byte>)
     [[nodiscard]]
-    static std::unique_ptr<SecretKey> secret_key_from_bytes(Type type, std::span<const T, N> data)
+    static std::unique_ptr<SecretKey> SecretKeyFromBytes(Type type, std::span<const T, N> data)
     {
-        return secret_key_from_bytes(type, std::as_bytes(data));
+        return SecretKeyFromBytes(type, std::as_bytes(data));
     }
 
     /**
@@ -109,9 +109,9 @@ class VRF
      */
     template <ByteRange R>
     [[nodiscard]]
-    static std::unique_ptr<SecretKey> secret_key_from_bytes(Type type, R &&data)
+    static std::unique_ptr<SecretKey> SecretKeyFromBytes(Type type, R &&data)
     {
-        return secret_key_from_bytes(type, byte_range_to_span(data));
+        return SecretKeyFromBytes(type, byte_range_to_span(data));
     }
 };
 

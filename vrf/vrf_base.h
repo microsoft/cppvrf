@@ -3,7 +3,9 @@
 
 #pragma once
 
+#include "vrf/secure_buf.h"
 #include "vrf/type.h"
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <span>
@@ -123,6 +125,28 @@ class Serializable
      */
     [[nodiscard]]
     virtual std::vector<std::byte> to_bytes() = 0;
+
+    /**
+     * Serializes the object into a SecureBuf. The default implementation calls to_bytes() and copies
+     * the result into secure memory. Derived classes handling secret key material must override this
+     * to avoid the intermediate non-secure allocation.
+     */
+    [[nodiscard]]
+    virtual SecureBuf to_secure_bytes()
+    {
+        std::vector<std::byte> bytes = to_bytes();
+
+        SecureBuf buf{bytes.size()};
+        if (buf.has_value())
+        {
+            std::copy_n(bytes.data(), bytes.size(), buf.get());
+        }
+
+        // Clean up the std::vector.
+        SecureBuf::Cleanse(bytes.data(), bytes.size());
+
+        return buf;
+    }
 
     /**
      * Deserializes an object from a span of bytes for the specified VRF type. Deserialization failure is
