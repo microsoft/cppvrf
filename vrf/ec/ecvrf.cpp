@@ -651,8 +651,8 @@ SecureBuf ECSecretKey::to_secure_bytes()
         return {};
     }
 
-    const int written = BN_bn2binpad(sk_bn, reinterpret_cast<unsigned char *>(buf.get()),
-                                     static_cast<int>(params.q_len));
+    const int written =
+        BN_bn2binpad(sk_bn, reinterpret_cast<unsigned char *>(buf.get()), static_cast<int>(params.q_len));
     if (written != static_cast<int>(params.q_len))
     {
         GetLogger()->error("ECSecretKey::to_secure_bytes failed to convert secret key scalar to bytes.");

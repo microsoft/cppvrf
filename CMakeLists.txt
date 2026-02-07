@@ -34,7 +34,7 @@ include(GNUInstallDirs)
 
 # Define source tree variables.
 set(cppvrf_INCLUDES_DIR "${CMAKE_CURRENT_LIST_DIR}")
-set(cppvrf_CONFIG_IN_FILENAME ${CMAKE_CURRENT_LIST_DIR}/cmake/cppvrfConfig.cmake.in)
+set(cppvrf_CONFIG_IN_FILENAME "${CMAKE_CURRENT_LIST_DIR}/cmake/cppvrfConfig.cmake.in")
 
 # Define build tree variables.
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
@@ -88,41 +88,41 @@ target_include_directories(cppvrf PUBLIC
 # Create an export set for cppvrf.
 install(TARGETS cppvrf
     EXPORT cppvrfTargets
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/cppvrf-${cppvrf_VERSION_MM}
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}/cppvrf-${cppvrf_VERSION_MM}"
 )
 
 # Create the CMake config file.
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-    ${cppvrf_CONFIG_IN_FILENAME} ${cppvrf_CONFIG_FILENAME}
-    INSTALL_DESTINATION ${cppvrf_CONFIG_INSTALL_DIR}
+    "${cppvrf_CONFIG_IN_FILENAME}" "${cppvrf_CONFIG_FILENAME}"
+    INSTALL_DESTINATION "${cppvrf_CONFIG_INSTALL_DIR}"
     PATH_VARS cppvrf_INCLUDES_INSTALL_DIR cppvrf_CONFIG_INSTALL_DIR
 )
 
 install(
     EXPORT cppvrfTargets
     NAMESPACE cppvrf::
-    DESTINATION ${cppvrf_CONFIG_INSTALL_DIR}
+    DESTINATION "${cppvrf_CONFIG_INSTALL_DIR}"
 )
 
 # Create a version file.
 write_basic_package_version_file(
-    ${cppvrf_CONFIG_VERSION_FILENAME}
+    "${cppvrf_CONFIG_VERSION_FILENAME}"
     VERSION ${cppvrf_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
 # Install the CMake config file.
 install(
-    FILES ${cppvrf_CONFIG_FILENAME} ${cppvrf_CONFIG_VERSION_FILENAME}
-    DESTINATION ${cppvrf_CONFIG_INSTALL_DIR}
+    FILES "${cppvrf_CONFIG_FILENAME}" "${cppvrf_CONFIG_VERSION_FILENAME}"
+    DESTINATION "${cppvrf_CONFIG_INSTALL_DIR}"
 )
 
 # Export cppvrfTargets from the build tree so it can be used without installing.
 export(
     EXPORT cppvrfTargets
     NAMESPACE cppvrf::
-    FILE ${cppvrf_TARGETS_FILENAME}
+    FILE "${cppvrf_TARGETS_FILENAME}"
 )
 
 # Test suite.

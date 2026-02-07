@@ -17,6 +17,8 @@
 namespace vrf::tests::utils
 {
 
+using enum Type;
+
 namespace
 {
 
@@ -352,13 +354,13 @@ RSA_VRF_TestVectorParams get_rsa_vrf_test_vector_params(Type type)
 {
     switch (type)
     {
-    case Type::RSA_FDH_VRF_RSA2048_SHA256:
+    case RSA_FDH_VRF_RSA2048_SHA256:
         return RSA_FDH_2048_SHA256_PARAMS;
-    case Type::RSA_FDH_VRF_RSA3072_SHA256:
+    case RSA_FDH_VRF_RSA3072_SHA256:
         return RSA_FDH_3072_SHA256_PARAMS;
-    case Type::RSA_FDH_VRF_RSA4096_SHA384:
+    case RSA_FDH_VRF_RSA4096_SHA384:
         return RSA_FDH_4096_SHA384_PARAMS;
-    case Type::RSA_FDH_VRF_RSA4096_SHA512:
+    case RSA_FDH_VRF_RSA4096_SHA512:
         return RSA_FDH_4096_SHA512_PARAMS;
     default:
         GetLogger()->error("No test vector parameters defined for VRF type: {}", to_string(type));
@@ -370,7 +372,7 @@ EC_VRF_TestVectorParams get_ec_vrf_test_vector_params(Type type)
 {
     switch (type)
     {
-    case Type::EC_VRF_P256_SHA256_TAI:
+    case EC_VRF_P256_SHA256_TAI:
         return EC_VRF_P256_SHA256_TAI_PARAMS;
     default:
         GetLogger()->error("No test vector parameters defined for VRF type: {}", to_string(type));
