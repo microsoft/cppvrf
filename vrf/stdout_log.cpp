@@ -16,14 +16,14 @@ std::shared_ptr<Logger> NewDefaultLogger()
     log_handlers[static_cast<std::size_t>(DEBUG)] = [](std::string msg) { std::cout << "[debug] " << msg << '\n'; };
     log_handlers[static_cast<std::size_t>(INFO)] = [](std::string msg) { std::cout << "[info] " << msg << '\n'; };
     log_handlers[static_cast<std::size_t>(WARN)] = [](std::string msg) { std::cerr << "[warning] " << msg << '\n'; };
-    log_handlers[static_cast<std::size_t>(ERROR)] = [](std::string msg) { std::cerr << "[error] " << msg << '\n'; };
+    log_handlers[static_cast<std::size_t>(ERR)] = [](std::string msg) { std::cerr << "[error] " << msg << '\n'; };
 
     std::array<flush_handler_t, log_level_count> flush_handlers{};
     flush_handlers[static_cast<std::size_t>(TRACE)] = []() { std::cout << std::flush; };
     flush_handlers[static_cast<std::size_t>(DEBUG)] = []() { std::cout << std::flush; };
     flush_handlers[static_cast<std::size_t>(INFO)] = []() { std::cout << std::flush; };
     flush_handlers[static_cast<std::size_t>(WARN)] = []() { std::cerr << std::flush; };
-    flush_handlers[static_cast<std::size_t>(ERROR)] = []() { std::cerr << std::flush; };
+    flush_handlers[static_cast<std::size_t>(ERR)] = []() { std::cerr << std::flush; };
 
     // No special close actions needed for stdout/stderr.
     std::array<close_handler_t, log_level_count> close_handlers{};

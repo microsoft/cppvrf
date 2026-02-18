@@ -24,7 +24,7 @@ std::shared_ptr<Logger> make_test_logger()
             log_handlers[static_cast<std::size_t>(LogLevel::WARN)] = [](std::string msg) {
                 captured_logs.push_back("[warning] " + msg);
             };
-            log_handlers[static_cast<std::size_t>(LogLevel::ERROR)] = [](std::string msg) {
+            log_handlers[static_cast<std::size_t>(LogLevel::ERR)] = [](std::string msg) {
                 captured_logs.push_back("[error] " + msg);
             };
             return log_handlers;
@@ -35,7 +35,7 @@ std::shared_ptr<Logger> make_test_logger()
             flush_handlers[static_cast<std::size_t>(LogLevel::DEBUG)] = []() {};
             flush_handlers[static_cast<std::size_t>(LogLevel::INFO)] = []() {};
             flush_handlers[static_cast<std::size_t>(LogLevel::WARN)] = []() {};
-            flush_handlers[static_cast<std::size_t>(LogLevel::ERROR)] = []() {};
+            flush_handlers[static_cast<std::size_t>(LogLevel::ERR)] = []() {};
             return flush_handlers;
         }(),
         []() {
@@ -44,7 +44,7 @@ std::shared_ptr<Logger> make_test_logger()
             close_handlers[static_cast<std::size_t>(LogLevel::DEBUG)] = []() { captured_logs.clear(); };
             close_handlers[static_cast<std::size_t>(LogLevel::INFO)] = []() { captured_logs.clear(); };
             close_handlers[static_cast<std::size_t>(LogLevel::WARN)] = []() { captured_logs.clear(); };
-            close_handlers[static_cast<std::size_t>(LogLevel::ERROR)] = []() { captured_logs.clear(); };
+            close_handlers[static_cast<std::size_t>(LogLevel::ERR)] = []() { captured_logs.clear(); };
             return close_handlers;
         }());
 }

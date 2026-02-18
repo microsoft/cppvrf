@@ -23,14 +23,14 @@ enum class LogLevel : std::size_t
     DEBUG,
     INFO,
     WARN,
-    ERROR,
-    IGNORE,
+    ERR,
+    SUPPRESS,
 };
 
 /**
- * @brief The number of actionable log levels (excludes IGNORE).
+ * @brief The number of actionable log levels (excludes SUPPRESS).
  */
-constexpr std::size_t log_level_count = static_cast<std::size_t>(LogLevel::IGNORE);
+constexpr std::size_t log_level_count = static_cast<std::size_t>(LogLevel::SUPPRESS);
 
 /**
  * @brief Callback type for log handlers.
@@ -57,7 +57,7 @@ class Logger
     /**
      * @brief Creates a logger with the given callback handlers.
      * @param[in] log_handlers Array of log handler callbacks, one per log level
-     *   (TRACE, DEBUG, INFO, WARN, ERROR). Pass an empty callback for any level that is not needed.
+     *   (TRACE, DEBUG, INFO, WARN, ERR). Pass an empty callback for any level that is not needed.
      * @param[in] flush_handlers Array of flush handler callbacks, one per log level.
      * @param[in] close_handlers Array of close handler callbacks, one per log level.
      * @return A shared pointer to the new logger.
@@ -87,8 +87,8 @@ class Logger
 
     /**
      * @brief Closes all log handlers on the logger.
-     * @note After closing, all handlers are set to null. The logger must be replaced
-     * via @ref GetOrSetLogger or @ref ResetDefaultLogger before it can be used again.
+     * @note After closing, all handlers are reset to empty. The logger must be replaced via @ref GetOrSetLogger or @ref
+     * ResetDefaultLogger before it can be used again.
      */
     void close()
     {
@@ -175,13 +175,13 @@ class Logger
     }
 
     /**
-     * @brief Logs a formatted message at ERROR level.
+     * @brief Logs a formatted message at ERR level.
      * @param[in] fmt_str The format string.
      * @param[in] args The format arguments.
      */
     template <typename... Args> void error(std::format_string<Args...> fmt_str, Args &&...args) const
     {
-        log(LogLevel::ERROR, fmt_str, std::forward<Args>(args)...);
+        log(LogLevel::ERR, fmt_str, std::forward<Args>(args)...);
     }
 
   private:

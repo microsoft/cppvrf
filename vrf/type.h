@@ -24,42 +24,40 @@ enum class Type : std::size_t
     UNKNOWN
 };
 
-using enum Type;
-
 inline constexpr bool is_rsa_type(Type type)
 {
-    return type == RSA_FDH_VRF_RSA2048_SHA256 || type == RSA_FDH_VRF_RSA3072_SHA256 ||
-           type == RSA_FDH_VRF_RSA4096_SHA384 || type == RSA_FDH_VRF_RSA4096_SHA512 ||
-           type == RSA_PSS_NOSALT_VRF_RSA2048_SHA256 || type == RSA_PSS_NOSALT_VRF_RSA3072_SHA256 ||
-           type == RSA_PSS_NOSALT_VRF_RSA4096_SHA384 || type == RSA_PSS_NOSALT_VRF_RSA4096_SHA512;
+    return type == Type::RSA_FDH_VRF_RSA2048_SHA256 || type == Type::RSA_FDH_VRF_RSA3072_SHA256 ||
+           type == Type::RSA_FDH_VRF_RSA4096_SHA384 || type == Type::RSA_FDH_VRF_RSA4096_SHA512 ||
+           type == Type::RSA_PSS_NOSALT_VRF_RSA2048_SHA256 || type == Type::RSA_PSS_NOSALT_VRF_RSA3072_SHA256 ||
+           type == Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA384 || type == Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA512;
 }
 
 inline constexpr bool is_ec_type(Type type)
 {
-    return type == EC_VRF_P256_SHA256_TAI;
+    return type == Type::EC_VRF_P256_SHA256_TAI;
 }
 
 inline constexpr std::string_view to_string(Type type)
 {
     switch (type)
     {
-    case RSA_FDH_VRF_RSA2048_SHA256:
+    case Type::RSA_FDH_VRF_RSA2048_SHA256:
         return "RSA_FDH_VRF_RSA2048_SHA256";
-    case RSA_FDH_VRF_RSA3072_SHA256:
+    case Type::RSA_FDH_VRF_RSA3072_SHA256:
         return "RSA_FDH_VRF_RSA3072_SHA256";
-    case RSA_FDH_VRF_RSA4096_SHA384:
+    case Type::RSA_FDH_VRF_RSA4096_SHA384:
         return "RSA_FDH_VRF_RSA4096_SHA384";
-    case RSA_FDH_VRF_RSA4096_SHA512:
+    case Type::RSA_FDH_VRF_RSA4096_SHA512:
         return "RSA_FDH_VRF_RSA4096_SHA512";
-    case RSA_PSS_NOSALT_VRF_RSA2048_SHA256:
+    case Type::RSA_PSS_NOSALT_VRF_RSA2048_SHA256:
         return "RSA_PSS_NOSALT_VRF_RSA2048_SHA256";
-    case RSA_PSS_NOSALT_VRF_RSA3072_SHA256:
+    case Type::RSA_PSS_NOSALT_VRF_RSA3072_SHA256:
         return "RSA_PSS_NOSALT_VRF_RSA3072_SHA256";
-    case RSA_PSS_NOSALT_VRF_RSA4096_SHA384:
+    case Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA384:
         return "RSA_PSS_NOSALT_VRF_RSA4096_SHA384";
-    case RSA_PSS_NOSALT_VRF_RSA4096_SHA512:
+    case Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA512:
         return "RSA_PSS_NOSALT_VRF_RSA4096_SHA512";
-    case EC_VRF_P256_SHA256_TAI:
+    case Type::EC_VRF_P256_SHA256_TAI:
         return "EC_VRF_P256_SHA256_TAI";
     default:
         return "UNKNOWN";

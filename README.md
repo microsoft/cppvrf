@@ -170,7 +170,7 @@ This means that these functions can be called also by passing directly (by value
 By default, the library simply logs to `std::cout` and `std::cerr` using the logger specified in [vrf/stdout_log.cpp](vrf/stdout_log.cpp).
 To create a custom logger, include [vrf/log.h](vrf/log.h) in your source file and create an instance of `std::shared_ptr<vrf::Logger>` using `vrf::Logger::Create`.
 This function takes as input three arrays of operation handlers (wrapped in `std::function`) for (1) the actual logging operations, (2) manual flush events, and (3) closing the log.
-Any of the handlers can be left as `nullptr`, in which case the function is simply not called.
+Any of the handlers can be left empty, in which case the function is simply not called.
 For simple examples, see [vrf/stdout_log.cpp](vrf/stdout_log.cpp) and [tests/log_tests.cpp](tests/log_tests.cpp).
 
 Once a `std::shared_ptr<vrf::Logger>` instance has been created, it can be used to log messages at different log levels (see `vrf::LogLevel` in [vrf/log.h](vrf/log.h)).
