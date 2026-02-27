@@ -47,8 +47,13 @@ void check_test_vector(const std::unique_ptr<SecretKey> &vrf_sk, const std::vect
     std::unique_ptr<Proof> proof = vrf_sk->get_vrf_proof(data);
     ASSERT_NE(nullptr, proof);
     ASSERT_TRUE(proof->is_initialized());
+
     std::vector<std::byte> proof_bytes = proof->to_bytes();
+    Type type = vrf_sk->get_type();
+    ASSERT_EQ(as_byte(type), proof_bytes[0]);
+    proof_bytes.erase(proof_bytes.begin());
     ASSERT_EQ(expected_proof, proof_bytes);
+
     std::unique_ptr<PublicKey> vrf_pk = vrf_sk->get_public_key();
     ASSERT_NE(nullptr, vrf_pk.get());
     auto [success, value] = vrf_pk->verify_vrf_proof(data, proof);
@@ -130,7 +135,7 @@ TEST_P(VRFTest, ProofToBytesFromBytes)
     std::vector<std::byte> proof_bytes = proof->to_bytes();
     ASSERT_FALSE(proof_bytes.empty());
 
-    auto proof_from_bytes = vrf::VRF::ProofFromBytes(type, proof_bytes);
+    auto proof_from_bytes = vrf::VRF::ProofFromBytes(proof_bytes);
     ASSERT_NE(proof_from_bytes, nullptr);
     ASSERT_TRUE(proof_from_bytes->is_initialized());
     ASSERT_EQ(proof_from_bytes->get_type(), type);
@@ -149,7 +154,7 @@ TEST_P(VRFTest, PublicKeyEncodeDecode)
     std::vector<std::byte> der_spki = pk->to_bytes();
     ASSERT_FALSE(der_spki.empty());
 
-    auto pk_from_string = vrf::VRF::PublicKeyFromBytes(type, der_spki);
+    auto pk_from_string = vrf::VRF::PublicKeyFromBytes(der_spki);
     ASSERT_NE(pk_from_string, nullptr);
     ASSERT_EQ(pk_from_string->get_type(), type);
 
@@ -232,8 +237,8 @@ TEST_P(VRFTest, InvalidProof)
     // Modify the proof to make it invalid: modification in the beginning.
     {
         std::vector<std::byte> invalid_proof_data = proof_bytes;
-        invalid_proof_data[0] ^= std::byte{0xFF};
-        auto invalid_proof = vrf::VRF::ProofFromBytes(type, invalid_proof_data);
+        invalid_proof_data[1] ^= std::byte{0xFF};
+        auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
         auto [success, hash] = pk->verify_vrf_proof(data, invalid_proof);
@@ -245,7 +250,7 @@ TEST_P(VRFTest, InvalidProof)
     {
         std::vector<std::byte> invalid_proof_data = proof_bytes;
         invalid_proof_data[invalid_proof_data.size() / 2] ^= std::byte{0xFF};
-        auto invalid_proof = vrf::VRF::ProofFromBytes(type, invalid_proof_data);
+        auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
         auto [success, hash] = pk->verify_vrf_proof(data, invalid_proof);
@@ -257,7 +262,7 @@ TEST_P(VRFTest, InvalidProof)
     {
         std::vector<std::byte> invalid_proof_data = proof_bytes;
         invalid_proof_data[invalid_proof_data.size() - 1] ^= std::byte{0xFF};
-        auto invalid_proof = vrf::VRF::ProofFromBytes(type, invalid_proof_data);
+        auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
         auto [success, hash] = pk->verify_vrf_proof(data, invalid_proof);
@@ -268,14 +273,14 @@ TEST_P(VRFTest, InvalidProof)
     // Empty proof.
     {
         std::vector<std::byte> invalid_proof_data = {};
-        auto invalid_proof = vrf::VRF::ProofFromBytes(type, invalid_proof_data);
+        auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_EQ(invalid_proof, nullptr);
     }
 
     // Totally wrong size proof.
     {
         std::vector<std::byte> invalid_proof_data(proof_bytes.begin(), proof_bytes.begin() + proof_bytes.size() / 2);
-        auto invalid_proof = vrf::VRF::ProofFromBytes(type, invalid_proof_data);
+        auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
         auto [success, hash] = pk->verify_vrf_proof(data, invalid_proof);
@@ -287,7 +292,7 @@ TEST_P(VRFTest, InvalidProof)
     {
         std::vector<std::byte> invalid_proof_data = proof_bytes;
         invalid_proof_data.insert(invalid_proof_data.end(), proof_bytes.begin(), proof_bytes.end());
-        auto invalid_proof = vrf::VRF::ProofFromBytes(type, invalid_proof_data);
+        auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
         auto [success, hash] = pk->verify_vrf_proof(data, invalid_proof);
@@ -308,8 +313,8 @@ TEST_P(VRFTest, InvalidPublicKey)
     {
         auto pk = sk->get_public_key();
         auto der_spki = pk->to_bytes();
-        der_spki[0] ^= std::byte{1};
-        auto invalid_pk = vrf::VRF::PublicKeyFromBytes(type, der_spki);
+        der_spki[1] ^= std::byte{1};
+        auto invalid_pk = vrf::VRF::PublicKeyFromBytes(der_spki);
         ASSERT_TRUE(invalid_pk == nullptr || !invalid_pk->is_initialized() ||
                     !invalid_pk->verify_vrf_proof(data, proof).first);
     }
@@ -319,7 +324,7 @@ TEST_P(VRFTest, InvalidPublicKey)
         auto pk = sk->get_public_key();
         auto der_spki = pk->to_bytes();
         der_spki[der_spki.size() / 2] ^= std::byte{1};
-        auto invalid_pk = vrf::VRF::PublicKeyFromBytes(type, der_spki);
+        auto invalid_pk = vrf::VRF::PublicKeyFromBytes(der_spki);
         ASSERT_TRUE(invalid_pk == nullptr || !invalid_pk->is_initialized() ||
                     !invalid_pk->verify_vrf_proof(data, proof).first);
     }
@@ -329,7 +334,7 @@ TEST_P(VRFTest, InvalidPublicKey)
         auto pk = sk->get_public_key();
         auto der_spki = pk->to_bytes();
         der_spki[der_spki.size() - 1] ^= std::byte{1};
-        auto invalid_pk = vrf::VRF::PublicKeyFromBytes(type, der_spki);
+        auto invalid_pk = vrf::VRF::PublicKeyFromBytes(der_spki);
         ASSERT_TRUE(invalid_pk == nullptr || !invalid_pk->is_initialized() ||
                     !invalid_pk->verify_vrf_proof(data, proof).first);
     }
@@ -395,7 +400,7 @@ TEST_P(VRFTest, SecretKeyRoundTrip)
     vrf::SecureBuf sk_bytes = sk->to_secure_bytes();
     ASSERT_TRUE(sk_bytes.has_value());
 
-    auto sk_roundtrip = vrf::VRF::SecretKeyFromBytes(type, sk_bytes);
+    auto sk_roundtrip = vrf::VRF::SecretKeyFromBytes(sk_bytes);
     ASSERT_NE(sk_roundtrip, nullptr);
     ASSERT_TRUE(sk_roundtrip->is_initialized());
     ASSERT_EQ(sk_roundtrip->get_type(), type);
@@ -433,7 +438,7 @@ TEST_P(VRFTest, SKSerializationVerifyCross)
     vrf::SecureBuf sk_bytes = sk1->to_secure_bytes();
     ASSERT_TRUE(sk_bytes.has_value());
 
-    auto sk2 = vrf::VRF::SecretKeyFromBytes(type, sk_bytes);
+    auto sk2 = vrf::VRF::SecretKeyFromBytes(sk_bytes);
     ASSERT_NE(sk2, nullptr);
     ASSERT_TRUE(sk2->is_initialized());
 

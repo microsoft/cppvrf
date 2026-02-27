@@ -149,29 +149,29 @@ class Serializable
     }
 
     /**
-     * Deserializes an object from a span of bytes for the specified VRF type. Deserialization failure is
-     * indicated by checking the output of VRFObject::is_initialized().
+     * Deserializes an object from a span of bytes. Deserialization failure is indicated by checking the output of
+     * VRFObject::is_initialized().
      */
-    virtual void from_bytes(Type type, std::span<const std::byte> data) = 0;
+    virtual void from_bytes(std::span<const std::byte> data) = 0;
 
     /**
-     * Deserializes an object from a span of byte-like elements for the specified VRF type. Deserialization
-     * failure is indicated by checking the output of VRFObject::is_initialized().
+     * Deserializes an object from a span of byte-like elements. Deserialization failure is indicated by checking the
+     * output of VRFObject::is_initialized().
      */
     template <ByteLike T, std::size_t N = std::dynamic_extent>
         requires(!std::same_as<std::remove_cv_t<T>, std::byte>)
-    void from_bytes(Type type, std::span<const T, N> data)
+    void from_bytes(std::span<const T, N> data)
     {
-        from_bytes(type, std::as_bytes(data));
+        from_bytes(std::as_bytes(data));
     }
 
     /**
-     * Deserializes an object from a byte range for the specified VRF type. Deserialization failure is
-     * indicated by checking the output of VRFObject::is_initialized().
+     * Deserializes an object from a byte range. Deserialization failure is indicated by checking the output of
+     * VRFObject::is_initialized().
      */
-    template <ByteRange R> void from_bytes(Type type, R &&data)
+    template <ByteRange R> void from_bytes(R &&data)
     {
-        from_bytes(type, byte_range_to_span(data));
+        from_bytes(byte_range_to_span(data));
     }
 };
 

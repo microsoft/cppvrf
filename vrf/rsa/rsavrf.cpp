@@ -548,9 +548,21 @@ std::vector<std::byte> construct_rsa_pss_tbs(Type type, std::span<const std::byt
 
 } // namespace
 
-void RSAProof::from_bytes(Type type, std::span<const std::byte> data)
+std::vector<std::byte> RSAProof::to_bytes()
 {
-    RSAProof rsa_proof{type, std::vector<std::byte>(data.begin(), data.end())};
+    const std::byte type_byte = as_byte(get_type());
+    std::vector<std::byte> ret;
+    ret.reserve(1 + proof_.size());
+    ret.push_back(type_byte);
+    ret.insert(ret.end(), proof_.begin(), proof_.end());
+    return ret;
+}
+
+void RSAProof::from_bytes(std::span<const std::byte> data)
+{
+    const auto [type, data_without_type] = extract_type_from_span(data);
+
+    RSAProof rsa_proof{type, std::vector<std::byte>(data_without_type.begin(), data_without_type.end())};
     if (!rsa_proof.is_initialized())
     {
         GetLogger()->warn("RSAProof::from_bytes called with invalid proof data for VRF type: {}", to_string(type));
@@ -808,7 +820,7 @@ SecureBuf RSASecretKey::to_secure_bytes()
         return {};
     }
 
-    SecureBuf buf = encode_secret_key_to_der_pkcs8(sk_guard_.get());
+    SecureBuf buf = encode_secret_key_to_der_pkcs8_with_type(get_type(), sk_guard_.get());
     if (!buf.has_value())
     {
         GetLogger()->error("RSASecretKey::to_secure_bytes failed to encode EVP_PKEY to DER PKCS#8.");
@@ -817,9 +829,10 @@ SecureBuf RSASecretKey::to_secure_bytes()
     return buf;
 }
 
-void RSASecretKey::from_bytes(Type type, std::span<const std::byte> data)
+void RSASecretKey::from_bytes(std::span<const std::byte> data)
 {
-    RSA_SK_Guard sk_guard{type, data};
+    const auto [type, data_without_type] = extract_type_from_span(data);
+    RSA_SK_Guard sk_guard{type, data_without_type};
     if (!sk_guard.has_value())
     {
         GetLogger()->warn("RSASecretKey::from_bytes called with invalid private key DER for VRF type: {}",
@@ -869,10 +882,10 @@ RSAPublicKey &RSAPublicKey::operator=(RSAPublicKey &&rhs) noexcept
     return *this;
 }
 
-RSAPublicKey::RSAPublicKey(Type type, std::span<const std::byte> der_spki)
+RSAPublicKey::RSAPublicKey(std::span<const std::byte> der_spki_with_type)
     : PublicKey{Type::UNKNOWN}, pk_guard_{}, mgf1_salt_{}
 {
-    RSA_PK_Guard pk_guard{type, der_spki};
+    RSA_PK_Guard pk_guard{der_spki_with_type};
     if (!pk_guard.has_value())
     {
         GetLogger()->warn("RSAPublicKey constructor failed to load EVP_PKEY from provided DER SPKI.");
@@ -888,7 +901,7 @@ RSAPublicKey::RSAPublicKey(Type type, std::span<const std::byte> der_spki)
 
     pk_guard_ = std::move(pk_guard);
     mgf1_salt_ = std::move(mgf1_salt);
-    set_type(type);
+    set_type(pk_guard_.get_type());
 }
 
 RSAPublicKey::RSAPublicKey(Type type, RSA_PK_Guard pk_guard) : PublicKey{Type::UNKNOWN}, pk_guard_{}, mgf1_salt_{}
@@ -919,7 +932,7 @@ std::vector<std::byte> RSAPublicKey::to_bytes()
         return {};
     }
 
-    std::vector<std::byte> der_spki = encode_public_key_to_der_spki(pk_guard_.get());
+    std::vector<std::byte> der_spki = encode_public_key_to_der_spki_with_type(get_type(), pk_guard_.get());
     if (der_spki.empty())
     {
         GetLogger()->error("RSAPublicKey::to_bytes failed to encode EVP_PKEY to DER SPKI.");
@@ -928,13 +941,12 @@ std::vector<std::byte> RSAPublicKey::to_bytes()
     return der_spki;
 }
 
-void RSAPublicKey::from_bytes(Type type, std::span<const std::byte> data)
+void RSAPublicKey::from_bytes(std::span<const std::byte> data)
 {
-    RSAPublicKey public_key{type, data};
+    RSAPublicKey public_key{data};
     if (!public_key.is_initialized())
     {
-        GetLogger()->warn("RSAPublicKey::from_bytes called with invalid public key DER for VRF type: {}",
-                          to_string(type));
+        GetLogger()->warn("RSAPublicKey::from_bytes called with invalid public key DER.");
         return;
     }
 

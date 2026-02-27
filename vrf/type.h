@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <ostream>
 #include <string_view>
+#include <utility>
 
 namespace vrf
 {
@@ -62,6 +63,22 @@ inline constexpr std::string_view to_string(Type type)
     default:
         return "UNKNOWN";
     }
+}
+
+inline constexpr std::byte as_byte(Type type)
+{
+    static_assert(std::in_range<std::uint8_t>(static_cast<std::size_t>(Type::UNKNOWN)));
+    return static_cast<std::byte>(type);
+}
+
+inline constexpr Type from_byte(std::byte b)
+{
+    const std::size_t value = static_cast<std::size_t>(b);
+    if (static_cast<std::size_t>(Type::UNKNOWN) < value)
+    {
+        return Type::UNKNOWN;
+    }
+    return static_cast<Type>(value);
 }
 
 inline std::ostream &operator<<(std::ostream &os, Type t)

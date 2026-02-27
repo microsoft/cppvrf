@@ -116,7 +116,7 @@ static void BM_VRF_ProofFromBytes(benchmark::State &state)
     auto proof_bytes = proof->to_bytes();
     for (auto _ : state)
     {
-        auto proof_from_bytes = vrf::VRF::ProofFromBytes(type, proof_bytes);
+        auto proof_from_bytes = vrf::VRF::ProofFromBytes(proof_bytes);
         benchmark::DoNotOptimize(proof_from_bytes);
     }
     state.SetLabel(std::string{vrf::to_string(type)});
@@ -169,7 +169,7 @@ static void BM_VRF_PublicKeyFromBytes(benchmark::State &state)
     auto der_spki = pk->to_bytes();
     for (auto _ : state)
     {
-        auto public_key_from_string = vrf::VRF::PublicKeyFromBytes(type, der_spki);
+        auto public_key_from_string = vrf::VRF::PublicKeyFromBytes(der_spki);
         benchmark::DoNotOptimize(public_key_from_string);
     }
     state.SetLabel(std::string{vrf::to_string(type)});
@@ -219,7 +219,7 @@ static void BM_VRF_SecretKeyFromBytes(benchmark::State &state)
     auto sk_bytes = sk->to_secure_bytes();
     for (auto _ : state)
     {
-        auto sk_from_bytes = vrf::VRF::SecretKeyFromBytes(type, sk_bytes);
+        auto sk_from_bytes = vrf::VRF::SecretKeyFromBytes(sk_bytes);
         benchmark::DoNotOptimize(sk_from_bytes);
     }
     state.SetLabel(std::string{vrf::to_string(type)});

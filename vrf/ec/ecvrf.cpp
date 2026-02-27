@@ -295,9 +295,21 @@ std::vector<std::byte> ECProof::get_vrf_value() const
     return get_vrf_value_internal(params, group, std::move(gamma), bcg);
 }
 
-void ECProof::from_bytes(Type type, std::span<const std::byte> data)
+std::vector<std::byte> ECProof::to_bytes()
 {
-    ECProof ec_proof{type, std::vector<std::byte>(data.begin(), data.end())};
+    const std::byte type_byte = as_byte(get_type());
+    std::vector<std::byte> ret;
+    ret.reserve(1 + proof_.size());
+    ret.push_back(type_byte);
+    ret.insert(ret.end(), proof_.begin(), proof_.end());
+    return ret;
+}
+
+void ECProof::from_bytes(std::span<const std::byte> data)
+{
+    const auto [type, data_without_type] = extract_type_from_span(data);
+
+    ECProof ec_proof{type, std::vector<std::byte>(data_without_type.begin(), data_without_type.end())};
     if (!ec_proof.is_initialized())
     {
         GetLogger()->warn("ECProof::from_bytes called with invalid proof data for VRF type: {}", to_string(type));
@@ -644,15 +656,17 @@ SecureBuf ECSecretKey::to_secure_bytes()
         return {};
     }
 
-    SecureBuf buf{params.q_len};
+    SecureBuf buf{params.q_len + 1 /* for type byte */};
     if (!buf.has_value())
     {
         GetLogger()->error("ECSecretKey::to_secure_bytes failed to allocate secure buffer.");
         return {};
     }
 
+    buf.get()[0] = as_byte(get_type());
+
     const int written =
-        BN_bn2binpad(sk_bn, reinterpret_cast<unsigned char *>(buf.get()), static_cast<int>(params.q_len));
+        BN_bn2binpad(sk_bn, reinterpret_cast<unsigned char *>(buf.get() + 1), static_cast<int>(params.q_len));
     if (written != static_cast<int>(params.q_len))
     {
         GetLogger()->error("ECSecretKey::to_secure_bytes failed to convert secret key scalar to bytes.");
@@ -662,8 +676,10 @@ SecureBuf ECSecretKey::to_secure_bytes()
     return buf;
 }
 
-void ECSecretKey::from_bytes(Type type, std::span<const std::byte> data)
+void ECSecretKey::from_bytes(std::span<const std::byte> data)
 {
+    const auto [type, data_without_type] = extract_type_from_span(data);
+
     if (!is_ec_type(type))
     {
         GetLogger()->warn("ECSecretKey::from_bytes called with non-EC VRF type: {}", to_string(type));
@@ -677,14 +693,15 @@ void ECSecretKey::from_bytes(Type type, std::span<const std::byte> data)
         return;
     }
 
-    if (data.empty() || !std::in_range<int>(data.size()) || data.size() != params.q_len)
+    if (data_without_type.empty() || !std::in_range<int>(data_without_type.size()) ||
+        data_without_type.size() != params.q_len)
     {
         GetLogger()->warn("ECSecretKey::from_bytes called with invalid scalar size for VRF type: {}", to_string(type));
         return;
     }
 
-    BIGNUM *bn =
-        BN_bin2bn(reinterpret_cast<const unsigned char *>(data.data()), static_cast<int>(data.size()), nullptr);
+    BIGNUM *bn = BN_bin2bn(reinterpret_cast<const unsigned char *>(data_without_type.data()),
+                           static_cast<int>(data_without_type.size()), nullptr);
     if (nullptr == bn)
     {
         GetLogger()->error("ECSecretKey::from_bytes failed to convert bytes to BIGNUM.");
@@ -1013,12 +1030,14 @@ std::vector<std::byte> ECPublicKey::to_bytes()
         return {};
     }
 
-    return encode_public_key_to_der_spki(pkey.get());
+    return encode_public_key_to_der_spki_with_type(get_type(), pkey.get());
 };
 
-void ECPublicKey::from_bytes(Type type, std::span<const std::byte> data)
+void ECPublicKey::from_bytes(std::span<const std::byte> data)
 {
-    ECPublicKey public_key{type, data};
+    const auto [type, data_without_type] = extract_type_from_span(data);
+
+    ECPublicKey public_key{type, data_without_type};
     if (!public_key.is_initialized())
     {
         GetLogger()->warn("ECPublicKey::from_bytes called with invalid public key DER for VRF type: {}",

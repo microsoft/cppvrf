@@ -255,15 +255,16 @@ RSA_PK_Guard::RSA_PK_Guard(const RSA_SK_Guard &sk_guard) : type_{Type::UNKNOWN},
         return;
     }
 
-    const std::vector<std::byte> der_spki = encode_public_key_to_der_spki(sk_guard.get());
-    if (der_spki.empty())
+    const std::vector<std::byte> der_spki_with_type =
+        encode_public_key_to_der_spki_with_type(sk_guard.get_type(), sk_guard.get());
+    if (der_spki_with_type.empty())
     {
         GetLogger()->warn("RSA_PK_Guard constructor failed to encode public key from RSA_SK_Guard.");
         return;
     }
 
     // Use the DER SPKI constructor to initialize.
-    RSA_PK_Guard pk_guard{sk_guard.get_type(), der_spki};
+    RSA_PK_Guard pk_guard{der_spki_with_type};
     if (!pk_guard.has_value())
     {
         GetLogger()->warn("RSA_PK_Guard constructor failed to create from DER SPKI of RSA_SK_Guard.");
@@ -275,8 +276,10 @@ RSA_PK_Guard::RSA_PK_Guard(const RSA_SK_Guard &sk_guard) : type_{Type::UNKNOWN},
     pkey_ = std::move(pk_guard.pkey_);
 }
 
-RSA_PK_Guard::RSA_PK_Guard(Type type, std::span<const std::byte> der_spki) : type_(Type::UNKNOWN), pkey_(nullptr)
+RSA_PK_Guard::RSA_PK_Guard(std::span<const std::byte> der_spki_with_type) : type_(Type::UNKNOWN), pkey_(nullptr)
 {
+    const auto [type, der_spki] = extract_type_from_span(der_spki_with_type);
+
     const RSAVRFParams params = get_rsavrf_params(type);
     EVP_PKEY_Guard pkey{decode_public_key_from_der_spki(params.algorithm_name.data(), der_spki)};
     if (!pkey.has_value())

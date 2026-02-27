@@ -4,6 +4,7 @@
 #pragma once
 
 #include "vrf/secure_buf.h"
+#include "vrf/type.h"
 #include <cstddef>
 #include <limits>
 #include <openssl/evp.h>
@@ -25,13 +26,13 @@ const char *get_propquery();
 EVP_PKEY *decode_public_key_from_der_spki(const char *algorithm_name, std::span<const std::byte> der_spki);
 
 [[nodiscard]]
-std::vector<std::byte> encode_public_key_to_der_spki(const EVP_PKEY *pkey);
+std::vector<std::byte> encode_public_key_to_der_spki_with_type(Type type, const EVP_PKEY *pkey);
 
 [[nodiscard]]
 EVP_PKEY *decode_secret_key_from_der_pkcs8(const char *algorithm_name, std::span<const std::byte> der_pkcs8);
 
 [[nodiscard]]
-SecureBuf encode_secret_key_to_der_pkcs8(const EVP_PKEY *pkey);
+SecureBuf encode_secret_key_to_der_pkcs8_with_type(Type type, const EVP_PKEY *pkey);
 
 EVP_PKEY *evp_pkey_upref(EVP_PKEY *pkey);
 
@@ -141,5 +142,8 @@ constexpr Curve nid_to_curve(int nid) noexcept
         return Curve::UNDEFINED;
     }
 }
+
+[[nodiscard]]
+std::pair<vrf::Type, std::span<const std::byte>> extract_type_from_span(std::span<const std::byte> data);
 
 } // namespace vrf

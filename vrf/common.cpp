@@ -55,7 +55,7 @@ EVP_PKEY *decode_public_key_from_der_spki(const char *algorithm_name, std::span<
     return pkey;
 }
 
-std::vector<std::byte> encode_public_key_to_der_spki(const EVP_PKEY *pkey)
+std::vector<std::byte> encode_public_key_to_der_spki_with_type(Type type, const EVP_PKEY *pkey)
 {
     if (nullptr == pkey)
     {
@@ -82,12 +82,15 @@ std::vector<std::byte> encode_public_key_to_der_spki(const EVP_PKEY *pkey)
 
     const std::byte *der_data_begin = reinterpret_cast<const std::byte *>(der_data);
     const std::byte *der_data_end = der_data_begin + der_data_len;
-    std::vector<std::byte> der_spki(der_data_begin, der_data_end);
+
+    std::vector<std::byte> buf{der_data_len + 1 /* for type byte */};
+    buf[0] = as_byte(type);
+    std::copy(der_data_begin, der_data_end, buf.begin() + 1);
 
     OPENSSL_free(der_data);
     OSSL_ENCODER_CTX_free(ectx);
 
-    return der_spki;
+    return buf;
 }
 
 EVP_PKEY *decode_secret_key_from_der_pkcs8(const char *algorithm_name, std::span<const std::byte> der_pkcs8)
@@ -121,7 +124,7 @@ EVP_PKEY *decode_secret_key_from_der_pkcs8(const char *algorithm_name, std::span
     return pkey;
 }
 
-SecureBuf encode_secret_key_to_der_pkcs8(const EVP_PKEY *pkey)
+SecureBuf encode_secret_key_to_der_pkcs8_with_type(vrf::Type type, const EVP_PKEY *pkey)
 {
     if (nullptr == pkey)
     {
@@ -146,10 +149,14 @@ SecureBuf encode_secret_key_to_der_pkcs8(const EVP_PKEY *pkey)
         return {};
     }
 
-    SecureBuf buf{der_data_len};
+    SecureBuf buf{der_data_len + 1 /* for type byte */};
     if (buf.has_value())
     {
-        std::copy_n(reinterpret_cast<const std::byte *>(der_data), der_data_len, buf.get());
+        // buf.has_value() is true only if the size is at least 1.
+        buf.get()[0] = as_byte(type);
+
+        // Copy in the value to the remaining buffer.
+        std::copy_n(reinterpret_cast<const std::byte *>(der_data), der_data_len, buf.get() + 1);
     }
 
     SecureBuf::Cleanse(der_data, der_data_len);
@@ -173,6 +180,34 @@ EVP_PKEY *evp_pkey_upref(EVP_PKEY *pkey)
     }
 
     return pkey;
+}
+
+std::pair<vrf::Type, std::span<const std::byte>> extract_type_from_span(std::span<const std::byte> data)
+{
+    // We extract the first byte of the data as the type, and return the rest of the data as a separate span. If the
+    // data is empty, we return UNKNOWN as the type and an empty span.
+    if (data.empty())
+    {
+        return {vrf::Type::UNKNOWN, std::span<const std::byte>{}};
+    }
+
+    const std::uint8_t type_byte = static_cast<std::uint8_t>(data[0]);
+
+    // First check that this is in range, i.e., less than vrf::Type::UNKNOWN.
+    if (static_cast<std::size_t>(type_byte) >= static_cast<std::size_t>(vrf::Type::UNKNOWN))
+    {
+        GetLogger()->warn("extract_type_from_span called with invalid type byte: {}", type_byte);
+        return {vrf::Type::UNKNOWN, std::span<const std::byte>{}};
+    }
+
+    // We can safely static_cast here since we've verified that the type byte is in range.
+    const vrf::Type type = static_cast<vrf::Type>(type_byte);
+
+    // We need to check data.size() > 1, because otherwise data.subspan(1) if undefined behavior.
+    const bool subspan_is_empty = data.size() <= 1;
+    std::span<const std::byte> remaining_data = subspan_is_empty ? std::span<const std::byte>{} : data.subspan(1);
+
+    return {type, remaining_data};
 }
 
 } // namespace vrf

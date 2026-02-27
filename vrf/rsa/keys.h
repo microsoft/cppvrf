@@ -92,7 +92,7 @@ class RSA_PK_Guard
 
     RSA_PK_Guard(const RSA_SK_Guard &sk_guard);
 
-    RSA_PK_Guard(Type type, std::span<const std::byte> der_spki);
+    RSA_PK_Guard(std::span<const std::byte> der_spki_with_type);
 
     ~RSA_PK_Guard()
     {

@@ -32,12 +32,9 @@ class RSAProof : public Proof
     }
 
     [[nodiscard]]
-    std::vector<std::byte> to_bytes() override
-    {
-        return proof_;
-    }
+    std::vector<std::byte> to_bytes() override;
 
-    void from_bytes(Type type, std::span<const std::byte> data) override;
+    void from_bytes(std::span<const std::byte> data) override;
 
     [[nodiscard]]
     bool is_initialized() const noexcept override
@@ -95,7 +92,7 @@ class RSASecretKey : public SecretKey
     [[nodiscard]]
     SecureBuf to_secure_bytes() override;
 
-    void from_bytes(Type type, std::span<const std::byte> data) override;
+    void from_bytes(std::span<const std::byte> data) override;
 
     [[nodiscard]]
     std::unique_ptr<SecretKey> clone() const override
@@ -145,7 +142,7 @@ class RSAPublicKey : public PublicKey
     [[nodiscard]]
     std::vector<std::byte> to_bytes() override;
 
-    void from_bytes(Type type, std::span<const std::byte> data) override;
+    void from_bytes(std::span<const std::byte> data) override;
 
     [[nodiscard]]
     std::unique_ptr<PublicKey> clone() const override
@@ -154,7 +151,7 @@ class RSAPublicKey : public PublicKey
     }
 
   private:
-    RSAPublicKey(Type type, std::span<const std::byte> der_spki);
+    RSAPublicKey(std::span<const std::byte> der_spki_with_type);
 
     RSAPublicKey(Type type, RSA_PK_Guard pk_guard);
 
