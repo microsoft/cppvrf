@@ -22,7 +22,7 @@ BIGNUM_Guard bytes_to_int_core(BN_bin2bn_func_t func, std::span<const std::byte>
 {
     if (in.empty() && !std::in_range<int>(in.size()))
     {
-        GetLogger()->error("bytes_to_int_core called with empty or too large input data.");
+        GetLogger()->debug("bytes_to_int_core called with empty or too large input data ({}).", in.size());
         return {};
     }
 
@@ -30,10 +30,13 @@ BIGNUM_Guard bytes_to_int_core(BN_bin2bn_func_t func, std::span<const std::byte>
     if (!bn.has_value() ||
         nullptr == func(reinterpret_cast<const unsigned char *>(in.data()), static_cast<int>(in.size()), bn.get()))
     {
-        GetLogger()->error("Failed to convert bytes to BIGNUM in bytes_to_int_core.");
+        GetLogger()->debug("Failed to convert bytes to BIGNUM (address {:p}) in bytes_to_int_core.",
+                           static_cast<const void *>(bn.get()));
         return {};
     }
 
+    GetLogger()->trace("Converted {} bytes to BIGNUM (address {:p}) in bytes_to_int_core (converter address {:p}).",
+                       in.size(), static_cast<const void *>(bn.get()), reinterpret_cast<const void *>(func));
     return bn;
 }
 
@@ -41,38 +44,43 @@ std::size_t int_to_bytes_core(BN_bn2binpad_func_t func, const BIGNUM_Guard &bn, 
 {
     if (!bn.has_value())
     {
-        GetLogger()->error("int_to_bytes_core called with uninitialized BIGNUM.");
+        GetLogger()->debug("int_to_bytes_core called with uninitialized BIGNUM.");
         return 0;
     }
     if (!std::in_range<int>(out.size()))
     {
-        GetLogger()->error("int_to_bytes_core called with too large output buffer size.");
+        GetLogger()->debug("int_to_bytes_core called with too large output buffer size ({}).", out.size());
         return 0;
     }
 
     const std::size_t bn_size = static_cast<std::size_t>(BN_num_bytes(bn.get()));
     if (0 == bn_size)
     {
-        GetLogger()->error("BIGNUM has zero size in int_to_bytes_core.");
+        GetLogger()->trace("BIGNUM (address {:p}) has size 0 in int_to_bytes_core; nothing to write.",
+                           static_cast<const void *>(bn.get()));
         return 0;
     }
 
     if (out.empty())
     {
+        GetLogger()->trace("int_to_bytes_core called with empty output buffer; required size is {}.", bn_size);
         return bn_size;
     }
 
     // Require at least bn_size bytes in out.
     if (out.size() < bn_size)
     {
-        GetLogger()->error("int_to_bytes_core called with insufficient output buffer size.");
+        GetLogger()->debug("int_to_bytes_core called with insufficient output buffer size {}; required size is {}.",
+                           out.size(), bn_size);
         return 0;
     }
 
     if (static_cast<int>(out.size()) !=
         func(bn.get(), reinterpret_cast<unsigned char *>(out.data()), static_cast<int>(out.size())))
     {
-        GetLogger()->error("Failed to convert BIGNUM to bytes in int_to_bytes_core.");
+        GetLogger()->err(
+            "Failed to convert BIGNUM (address {:p}) to bytes in int_to_bytes_core (converter address {:p}).",
+            static_cast<const void *>(bn.get()), reinterpret_cast<const void *>(func));
         return 0;
     }
 

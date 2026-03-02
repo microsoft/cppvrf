@@ -62,7 +62,7 @@ TEST(LogTests, BasicLogging)
     // Log messages at different levels.
     GetLogger()->info("This is an info message.");
     GetLogger()->warn("This is a warning message.");
-    GetLogger()->error("This is an error message.");
+    GetLogger()->err("This is an error message.");
     GetLogger()->debug("This debug message is not captured.");
 
     // Verify that the captured logs match expected output.
@@ -71,8 +71,9 @@ TEST(LogTests, BasicLogging)
     EXPECT_EQ(captured_logs[1], "[warning] This is a warning message.");
     EXPECT_EQ(captured_logs[2], "[error] This is an error message.");
 
-    // Clean up by closing the logger.
+    // Clean up by closing the logger and restore the default.
     GetLogger()->close();
+    ResetDefaultLogger();
 }
 
 TEST(LogTests, FlushAndClose)
@@ -93,8 +94,9 @@ TEST(LogTests, FlushAndClose)
     ASSERT_EQ(captured_logs.size(), 1);
     EXPECT_EQ(captured_logs[0], "[info] Logging before flush.");
 
-    // Close the logger, which should clear captured logs.
+    // Clean up by closing the logger and restore the default.
     GetLogger()->close();
+    ResetDefaultLogger();
 
     // Verify that captured logs are cleared after close.
     EXPECT_TRUE(captured_logs.empty());
@@ -115,11 +117,12 @@ TEST(LogTests, LogLevel)
     ASSERT_EQ(captured_logs.size(), 0);
 
     GetLogger()->warn("Warning message will be captured.");
-    GetLogger()->error("Error message will be captured.");
+    GetLogger()->err("Error message will be captured.");
     ASSERT_EQ(captured_logs.size(), 2);
 
-    // Clean up by closing the logger.
+    // Clean up by closing the logger and restore the default.
     GetLogger()->close();
+    ResetDefaultLogger();
 }
 
 } // namespace vrf::tests

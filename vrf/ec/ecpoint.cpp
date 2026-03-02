@@ -17,21 +17,21 @@ std::optional<bool> try_subtract_reduce_mod_group_order(BIGNUM_Guard &bn, const 
 {
     if (!bn.has_value() || !group.has_value())
     {
-        GetLogger()->error(
+        GetLogger()->debug(
             "try_subtract_reduce_mod_group_order called with uninitialized BIGNUM, EC_GROUP, or BN_CTX.");
         return std::nullopt;
     }
 
     if (!ensure_bcg_set(bcg, bn.is_secure()))
     {
-        GetLogger()->error("try_subtract_reduce_mod_group_order failed to obtain BN_CTX.");
+        GetLogger()->err("try_subtract_reduce_mod_group_order failed to obtain BN_CTX.");
         return std::nullopt;
     }
 
     const BIGNUM *order = EC_GROUP_get0_order(group.get());
     if (nullptr == order)
     {
-        GetLogger()->error("Failed to get group order from EC_GROUP.");
+        GetLogger()->err("Failed to get group order from EC_GROUP.");
         return std::nullopt;
     }
 
@@ -43,7 +43,7 @@ std::optional<bool> try_subtract_reduce_mod_group_order(BIGNUM_Guard &bn, const 
 
     if (1 != BN_sub(bn.get(), bn.get(), order))
     {
-        GetLogger()->error("Call to BN_sub failed in try_subtract_reduce_mod_group_order.");
+        GetLogger()->debug("Call to BN_sub failed in try_subtract_reduce_mod_group_order.");
         return std::nullopt;
     }
 
@@ -65,33 +65,33 @@ bool reduce_mod_group_order(BIGNUM_Guard &bn, const EC_GROUP_Guard &group, BN_CT
 
     if (!bn.has_value() || !group.has_value())
     {
-        GetLogger()->error("reduce_mod_group_order called with uninitialized BIGNUM, EC_GROUP, or BN_CTX.");
+        GetLogger()->debug("reduce_mod_group_order called with uninitialized BIGNUM, EC_GROUP, or BN_CTX.");
         return false;
     }
 
     if (!ensure_bcg_set(bcg, bn.is_secure()))
     {
-        GetLogger()->error("reduce_mod_group_order failed to obtain BN_CTX.");
+        GetLogger()->err("reduce_mod_group_order failed to obtain BN_CTX.");
         return false;
     }
 
     const BIGNUM *order = EC_GROUP_get0_order(group.get());
     if (nullptr == order)
     {
-        GetLogger()->error("Failed to get group order from EC_GROUP.");
+        GetLogger()->err("Failed to get group order from EC_GROUP.");
         return false;
     }
 
     BIGNUM_Guard bn_temp{bn.is_secure()};
     if (!bn_temp.has_value())
     {
-        GetLogger()->error("Failed to create temporary BN_CTX or BIGNUM for reduce_mod_group_order.");
+        GetLogger()->err("Failed to create temporary BN_CTX or BIGNUM for reduce_mod_group_order.");
         return false;
     }
 
     if (1 != BN_nnmod(bn_temp.get(), bn.get(), order, bcg.get()) || nullptr == BN_copy(bn.get(), bn_temp.get()))
     {
-        GetLogger()->error("Call to BN_mod or BN_copy failed in reduce_mod_group_order.");
+        GetLogger()->warn("Call to BN_mod or BN_copy failed in reduce_mod_group_order.");
         return false;
     }
 
@@ -104,7 +104,7 @@ ScalarType::ScalarType(BIGNUM_Guard &&bn) : scalar_{}
 {
     if (!bn.has_value())
     {
-        GetLogger()->error("ScalarType constructor called with uninitialized BIGNUM_Guard.");
+        GetLogger()->debug("ScalarType constructor called with uninitialized BIGNUM_Guard.");
         return;
     }
     scalar_ = std::move(bn);
@@ -115,7 +115,7 @@ ScalarType::ScalarType(bool secure) : scalar_{}
     scalar_ = BIGNUM_Guard{secure};
     if (!scalar_.has_value())
     {
-        GetLogger()->error("Failed to allocate BIGNUM in ScalarType constructor.");
+        GetLogger()->debug("Failed to allocate BIGNUM in ScalarType constructor.");
     }
 }
 
@@ -133,7 +133,7 @@ ScalarType &ScalarType::operator=(const ScalarType &assign)
 
         if (!success)
         {
-            GetLogger()->error("Failed to copy BIGNUM in ScalarType copy assignment.");
+            GetLogger()->err("Failed to copy BIGNUM in ScalarType copy assignment.");
             return *this;
         }
         else
@@ -163,7 +163,7 @@ bool ScalarType::set_random(const EC_GROUP_Guard &group)
 {
     if (!has_value() || !group.has_value())
     {
-        GetLogger()->error("set_random called with uninitialized ScalarType or EC_GROUP.");
+        GetLogger()->debug("set_random called with uninitialized ScalarType or EC_GROUP.");
         return false;
     }
 
@@ -171,23 +171,23 @@ bool ScalarType::set_random(const EC_GROUP_Guard &group)
     BN_CTX_Guard bcg{secure};
     if (!bcg.has_value())
     {
-        GetLogger()->error("Failed to create temporary BN_CTX for set_random.");
+        GetLogger()->err("Failed to create temporary BN_CTX in set_random.");
         return false;
     }
 
     const int group_order_bits = EC_GROUP_order_bits(group.get());
-    const int random_bits = 2 * group_order_bits; // Double the bits to reduce bias
+    const int random_bits = 2 * group_order_bits; // Double the bits to reduce bias.
     const unsigned prg_strength = static_cast<unsigned>(group_order_bits / 2);
     BIGNUM_Guard bn_temp{secure};
     if (1 != BN_priv_rand_ex(bn_temp.get(), random_bits, BN_RAND_TOP_ANY, BN_RAND_BOTTOM_ANY, prg_strength, bcg.get()))
     {
-        GetLogger()->error("Call to BN_priv_rand_ex failed in set_random.");
+        GetLogger()->debug("Call to BN_priv_rand_ex failed in set_random.");
         return false;
     }
 
     if (!reduce_mod_group_order(bn_temp, group, bcg))
     {
-        GetLogger()->error("Failed to reduce random value mod group order in set_random.");
+        GetLogger()->debug("Failed to reduce random value mod group order in set_random.");
         return false;
     }
 
@@ -195,6 +195,7 @@ bool ScalarType::set_random(const EC_GROUP_Guard &group)
     using std::swap;
     swap(scalar_, bn_temp);
 
+    GetLogger()->trace("set_random generated random scalar with {} bits and reduced mod group order.", random_bits);
     return true;
 }
 
@@ -212,21 +213,21 @@ bool ScalarType::negate(const EC_GROUP_Guard &group, BN_CTX_Guard &bcg)
 {
     if (!has_value() || !group.has_value())
     {
-        GetLogger()->error("negate called with uninitialized ScalarType or EC_GROUP.");
+        GetLogger()->debug("negate called with uninitialized ScalarType or EC_GROUP.");
         return false;
     }
 
     const bool secure = is_secure();
     if (!ensure_bcg_set(bcg, secure))
     {
-        GetLogger()->error("Failed to ensure BN_CTX is available for negate.");
+        GetLogger()->err("Failed to ensure BN_CTX is available for negate.");
         return false;
     }
 
     const BIGNUM *order = EC_GROUP_get0_order(group.get());
     if (nullptr == order)
     {
-        GetLogger()->error("Failed to get group order from EC_GROUP in negate.");
+        GetLogger()->err("Failed to get group order from EC_GROUP in negate.");
         return false;
     }
 
@@ -238,7 +239,7 @@ bool ScalarType::negate(const EC_GROUP_Guard &group, BN_CTX_Guard &bcg)
     {
         if (!reduce_mod_group_order(scalar_, group, bcg))
         {
-            GetLogger()->error("Failed to reduce scalar mod group order in negate.");
+            GetLogger()->debug("Failed to reduce scalar mod group order in negate.");
             return false;
         }
     }
@@ -246,20 +247,20 @@ bool ScalarType::negate(const EC_GROUP_Guard &group, BN_CTX_Guard &bcg)
     BIGNUM_Guard bn_temp{secure};
     if (!bn_temp.has_value())
     {
-        GetLogger()->error("Failed to create temporary BIGNUM for negate.");
+        GetLogger()->err("Failed to create temporary BIGNUM for negate.");
         return false;
     }
 
     // bn_temp = order - scalar_
     if (1 != BN_sub(bn_temp.get(), order, scalar_.get()))
     {
-        GetLogger()->error("Call to BN_sub failed in negate.");
+        GetLogger()->debug("Call to BN_sub failed in negate.");
         return false;
     }
 
     if (nullptr == BN_copy(scalar_.get(), bn_temp.get()))
     {
-        GetLogger()->error("Call to BN_copy failed in negate.");
+        GetLogger()->err("Call to BN_copy failed in negate.");
         return false;
     }
 
@@ -270,21 +271,21 @@ bool ScalarType::add(const ScalarType &rhs, const EC_GROUP_Guard &group, BN_CTX_
 {
     if (!has_value() || !rhs.has_value() || !group.has_value())
     {
-        GetLogger()->error("add called with uninitialized ScalarType or EC_GROUP.");
+        GetLogger()->debug("add called with uninitialized ScalarType or EC_GROUP.");
         return false;
     }
 
     const bool secure = is_secure();
     if (!ensure_bcg_set(bcg, secure))
     {
-        GetLogger()->error("Failed to ensure BN_CTX is available for add.");
+        GetLogger()->err("Failed to ensure BN_CTX is available for add.");
         return false;
     }
 
     const BIGNUM *order = EC_GROUP_get0_order(group.get());
     if (nullptr == order)
     {
-        GetLogger()->error("Failed to get group order from EC_GROUP in add.");
+        GetLogger()->err("Failed to get group order from EC_GROUP in add.");
         return false;
     }
 
@@ -294,7 +295,7 @@ bool ScalarType::add(const ScalarType &rhs, const EC_GROUP_Guard &group, BN_CTX_
         if (1 != BN_mod_add(bn_temp.get(), scalar_.get(), rhs.scalar_.get(), order, bcg.get()) ||
             nullptr == BN_copy(scalar_.get(), bn_temp.get()))
         {
-            GetLogger()->error("Call to BN_mod_add or BN_copy failed in add.");
+            GetLogger()->debug("Call to BN_mod_add or BN_copy failed in add.");
             return false;
         }
     }
@@ -304,7 +305,7 @@ bool ScalarType::add(const ScalarType &rhs, const EC_GROUP_Guard &group, BN_CTX_
         if (1 != BN_add(scalar_.get(), scalar_.get(), rhs.scalar_.get()) ||
             !reduce_mod_group_order(scalar_, group, bcg))
         {
-            GetLogger()->error("Call to BN_add or reduce_mod_group_order failed in add.");
+            GetLogger()->debug("Call to BN_add or reduce_mod_group_order failed in add.");
             return false;
         }
     }
@@ -316,21 +317,21 @@ bool ScalarType::subtract(const ScalarType &rhs, const EC_GROUP_Guard &group, BN
 {
     if (!has_value() || !rhs.has_value() || !group.has_value())
     {
-        GetLogger()->error("subtract called with uninitialized ScalarType or EC_GROUP.");
+        GetLogger()->debug("subtract called with uninitialized ScalarType or EC_GROUP.");
         return false;
     }
 
     const bool secure = is_secure();
     if (!ensure_bcg_set(bcg, secure))
     {
-        GetLogger()->error("Failed to ensure BN_CTX is available for subtract.");
+        GetLogger()->err("Failed to ensure BN_CTX is available for subtract.");
         return false;
     }
 
     const BIGNUM *order = EC_GROUP_get0_order(group.get());
     if (nullptr == order)
     {
-        GetLogger()->error("Failed to get group order from EC_GROUP in subtract.");
+        GetLogger()->err("Failed to get group order from EC_GROUP in subtract.");
         return false;
     }
 
@@ -338,7 +339,7 @@ bool ScalarType::subtract(const ScalarType &rhs, const EC_GROUP_Guard &group, BN
     {
         if (1 != BN_sub(scalar_.get(), scalar_.get(), rhs.scalar_.get()))
         {
-            GetLogger()->error("Call to BN_sub failed in subtract.");
+            GetLogger()->debug("Call to BN_sub failed in subtract.");
             return false;
         }
     }
@@ -348,7 +349,7 @@ bool ScalarType::subtract(const ScalarType &rhs, const EC_GROUP_Guard &group, BN
         if (1 != BN_add(scalar_.get(), scalar_.get(), order) ||
             1 != BN_sub(scalar_.get(), scalar_.get(), rhs.scalar_.get()))
         {
-            GetLogger()->error("Call to BN_add or BN_sub failed in subtract.");
+            GetLogger()->debug("Call to BN_add or BN_sub failed in subtract.");
             return false;
         }
     }
@@ -356,7 +357,7 @@ bool ScalarType::subtract(const ScalarType &rhs, const EC_GROUP_Guard &group, BN
     // Finally, ensure the result is reduced mod order.
     if (!reduce_mod_group_order(scalar_, group, bcg))
     {
-        GetLogger()->error("Failed to reduce scalar mod group order in subtract.");
+        GetLogger()->debug("Failed to reduce scalar mod group order in subtract.");
         return false;
     }
 
@@ -367,35 +368,35 @@ bool ScalarType::multiply(const ScalarType &rhs, const EC_GROUP_Guard &group, BN
 {
     if (!has_value() || !rhs.has_value() || !group.has_value())
     {
-        GetLogger()->error("multiply called with uninitialized ScalarType or EC_GROUP.");
+        GetLogger()->debug("multiply called with uninitialized ScalarType or EC_GROUP.");
         return false;
     }
 
     const bool secure = is_secure();
     if (!ensure_bcg_set(bcg, secure))
     {
-        GetLogger()->error("Failed to ensure BN_CTX is available for multiply.");
+        GetLogger()->err("Failed to ensure BN_CTX is available for multiply.");
         return false;
     }
 
     const BIGNUM *order = EC_GROUP_get0_order(group.get());
     if (nullptr == order)
     {
-        GetLogger()->error("Failed to get group order from EC_GROUP in multiply.");
+        GetLogger()->err("Failed to get group order from EC_GROUP in multiply.");
         return false;
     }
 
     BIGNUM_Guard bn_temp{secure};
     if (!bn_temp.has_value())
     {
-        GetLogger()->error("Failed to create temporary BIGNUM for multiply.");
+        GetLogger()->err("Failed to create temporary BIGNUM for multiply.");
         return false;
     }
 
     if (1 != BN_mod_mul(bn_temp.get(), scalar_.get(), rhs.scalar_.get(), order, bcg.get()) ||
         nullptr == BN_copy(scalar_.get(), bn_temp.get()))
     {
-        GetLogger()->error("Call to BN_mod_mul or BN_copy failed in multiply.");
+        GetLogger()->err("Call to BN_mod_mul or BN_copy failed in multiply.");
         return false;
     }
 
@@ -406,7 +407,7 @@ bool ScalarType::reduce_mod_order(const EC_GROUP_Guard &group, BN_CTX_Guard &bcg
 {
     if (!reduce_mod_group_order(scalar_, group, bcg))
     {
-        GetLogger()->error("Failed to reduce scalar mod group order in reduce_mod_order.");
+        GetLogger()->debug("Failed to reduce scalar mod group order in reduce_mod_order.");
         return false;
     }
 
@@ -434,7 +435,7 @@ ECPoint::ECPoint(const EC_GROUP_Guard &group, SpecialPoint set_to)
     EC_POINT_Guard pt{group};
     if (!pt.has_value())
     {
-        GetLogger()->error("Failed to create EC_POINT in ECPoint constructor.");
+        GetLogger()->debug("Failed to create EC_POINT in ECPoint constructor.");
         return;
     }
 
@@ -443,7 +444,7 @@ ECPoint::ECPoint(const EC_GROUP_Guard &group, SpecialPoint set_to)
         const EC_POINT *gen = EC_GROUP_get0_generator(group.get());
         if (1 != EC_POINT_copy(pt.get(), gen))
         {
-            GetLogger()->error("Call to EC_POINT_copy failed in ECPoint constructor.");
+            GetLogger()->err("Call to EC_POINT_copy failed in ECPoint constructor.");
             return;
         }
     }
@@ -455,7 +456,7 @@ ECPoint::ECPoint(EC_POINT_Guard &&source) : pt_{}
 {
     if (!source.has_value())
     {
-        GetLogger()->error("ECPoint constructor called with uninitialized EC_POINT_Guard.");
+        GetLogger()->debug("ECPoint constructor called with uninitialized EC_POINT_Guard.");
         return;
     }
     pt_ = std::move(source);
@@ -474,6 +475,12 @@ ECPoint &ECPoint::operator=(const ECPoint &assign)
 
             // Make a copy of the point and set.
             EC_POINT *ec_pt = EC_POINT_dup(assign.pt_.get(), group.get());
+            if (nullptr == ec_pt)
+            {
+                GetLogger()->err("EC_POINT_dup failed in ECPoint copy assignment.");
+                return *this;
+            }
+
             BN_CTX_Guard bcg{false};
             pt_copy = EC_POINT_Guard{assign.pt_.get_curve(), ec_pt, bcg};
             success = pt_copy.has_value();
@@ -481,7 +488,7 @@ ECPoint &ECPoint::operator=(const ECPoint &assign)
 
         if (!success)
         {
-            GetLogger()->error("Failed to copy EC_POINT in ECPoint copy assignment.");
+            GetLogger()->err("Failed to copy EC_POINT in ECPoint copy assignment.");
             return *this;
         }
         else
@@ -511,27 +518,27 @@ bool ECPoint::double_scalar_multiply(const EC_GROUP_Guard &group, const ScalarTy
 
     if (!group.has_value() || group.get_curve() != get_curve())
     {
-        GetLogger()->error("double_scalar_multiply called with uninitialized EC_GROUP or mismatched EC_GROUP.");
+        GetLogger()->debug("double_scalar_multiply called with uninitialized EC_GROUP or mismatched EC_GROUP.");
         return false;
     }
 
     // We require that at least one of the scalar inputs has a value.
     if (!scalar1.has_value() && !scalar2.has_value())
     {
-        GetLogger()->error("double_scalar_multiply called with both scalars uninitialized.");
+        GetLogger()->debug("double_scalar_multiply called with both scalars uninitialized.");
         return false;
     }
 
     const bool secure = (scalar1.has_value() && scalar1.is_secure()) || (scalar2.has_value() && scalar2.is_secure());
     if (!ensure_bcg_set(bcg, secure))
     {
-        GetLogger()->error("double_scalar_multiply failed to obtain BN_CTX.");
+        GetLogger()->err("double_scalar_multiply failed to obtain BN_CTX.");
         return false;
     }
 
     if (1 != EC_POINT_mul(group.get(), pt_.get(), scalar2.get().get(), pt_.get(), scalar1.get().get(), bcg.get()))
     {
-        GetLogger()->error("Call to EC_POINT_mul failed in double_scalar_multiply.");
+        GetLogger()->debug("Call to EC_POINT_mul failed in double_scalar_multiply.");
         return false;
     }
 
@@ -553,19 +560,19 @@ bool ECPoint::add(const EC_GROUP_Guard &group, const ECPoint &other, BN_CTX_Guar
     if (!has_value() || !other.has_value() || !group.has_value() || get_curve() != other.get_curve() ||
         group.get_curve() != get_curve())
     {
-        GetLogger()->error("add called with uninitialized ECPoint or mismatched curves.");
+        GetLogger()->debug("add called with uninitialized ECPoint or mismatched curves.");
         return false;
     }
 
     if (!ensure_bcg_set(bcg, false))
     {
-        GetLogger()->error("add failed to obtain BN_CTX.");
+        GetLogger()->err("add failed to obtain BN_CTX.");
         return false;
     }
 
     if (1 != EC_POINT_add(group.get(), pt_.get(), pt_.get(), other.pt_.get(), bcg.get()))
     {
-        GetLogger()->error("Call to EC_POINT_add failed in add.");
+        GetLogger()->debug("Call to EC_POINT_add failed in add.");
         return false;
     }
 
@@ -576,19 +583,19 @@ bool ECPoint::negate(const EC_GROUP_Guard &group, BN_CTX_Guard &bcg)
 {
     if (!has_value() || !group.has_value() || group.get_curve() != get_curve())
     {
-        GetLogger()->error("negate called with uninitialized ECPoint or mismatched curves.");
+        GetLogger()->debug("negate called with uninitialized ECPoint or mismatched curves.");
         return false;
     }
 
     if (!ensure_bcg_set(bcg, false))
     {
-        GetLogger()->error("subtract failed to obtain BN_CTX.");
+        GetLogger()->err("subtract failed to obtain BN_CTX.");
         return false;
     }
 
     if (1 != EC_POINT_invert(group.get(), pt_.get(), bcg.get()))
     {
-        GetLogger()->error("Call to EC_POINT_invert failed in negate.");
+        GetLogger()->debug("Call to EC_POINT_invert failed in negate.");
         return false;
     }
 

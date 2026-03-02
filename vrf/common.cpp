@@ -28,7 +28,8 @@ EVP_PKEY *decode_public_key_from_der_spki(const char *algorithm_name, std::span<
 {
     if (nullptr == algorithm_name || der_spki.empty())
     {
-        GetLogger()->warn("decode_public_key_from_der_spki called with null algorithm name or empty DER data.");
+        GetLogger()->debug("decode_public_key_from_der_spki failed for algorithm {}, data size {}.",
+                           nullptr == algorithm_name ? "null" : algorithm_name, der_spki.size());
         return nullptr;
     }
 
@@ -37,7 +38,7 @@ EVP_PKEY *decode_public_key_from_der_spki(const char *algorithm_name, std::span<
                                                            EVP_PKEY_PUBLIC_KEY, get_libctx(), get_propquery());
     if (nullptr == dctx)
     {
-        GetLogger()->error("Failed to create OSSL_DECODER_CTX for loading public key.");
+        GetLogger()->err("Failed to create OSSL_DECODER_CTX for loading public key.");
         return nullptr;
     }
 
@@ -45,13 +46,16 @@ EVP_PKEY *decode_public_key_from_der_spki(const char *algorithm_name, std::span<
     std::size_t der_data_len = der_spki.size();
     if (1 != OSSL_DECODER_from_data(dctx, &der_data, &der_data_len))
     {
-        GetLogger()->warn("Failed to decode DER SPKI into EVP_PKEY using OSSL_DECODER_from_data.");
+        GetLogger()->debug("Failed to decode DER SPKI into EVP_PKEY using OSSL_DECODER_from_data.");
         EVP_PKEY_free(pkey);
         OSSL_DECODER_CTX_free(dctx);
         return nullptr;
     }
 
     OSSL_DECODER_CTX_free(dctx);
+
+    GetLogger()->trace("Decoded public key (address {:p}) from DER SPKI for algorithm {}, data size {}.",
+                       static_cast<const void *>(pkey), algorithm_name, der_spki.size());
     return pkey;
 }
 
@@ -59,7 +63,7 @@ std::vector<std::byte> encode_public_key_to_der_spki_with_type(Type type, const 
 {
     if (nullptr == pkey)
     {
-        GetLogger()->warn("encode_public_key_from_der_spki called with null key.");
+        GetLogger()->debug("encode_public_key_from_der_spki_with_type called with null key.");
         return {};
     }
 
@@ -67,7 +71,7 @@ std::vector<std::byte> encode_public_key_to_der_spki_with_type(Type type, const 
         OSSL_ENCODER_CTX_new_for_pkey(pkey, EVP_PKEY_PUBLIC_KEY, "DER", "SubjectPublicKeyInfo", get_propquery());
     if (nullptr == ectx)
     {
-        GetLogger()->error("Failed to create OSSL_ENCODER_CTX for saving public key.");
+        GetLogger()->err("Failed to create OSSL_ENCODER_CTX for saving public key.");
         return {};
     }
 
@@ -75,7 +79,7 @@ std::vector<std::byte> encode_public_key_to_der_spki_with_type(Type type, const 
     std::size_t der_data_len = 0;
     if (1 != OSSL_ENCODER_to_data(ectx, &der_data, &der_data_len))
     {
-        GetLogger()->error("Failed to encode to DER SPKI using OSSL_ENCODER_to_data.");
+        GetLogger()->err("Failed to encode public key to DER SPKI using OSSL_ENCODER_to_data.");
         OSSL_ENCODER_CTX_free(ectx);
         return {};
     }
@@ -90,6 +94,8 @@ std::vector<std::byte> encode_public_key_to_der_spki_with_type(Type type, const 
     OPENSSL_free(der_data);
     OSSL_ENCODER_CTX_free(ectx);
 
+    GetLogger()->trace("Encoded public key (address {:p}) to DER SPKI for type {}, data size {}.",
+                       static_cast<const void *>(pkey), to_string(type), buf.size());
     return buf;
 }
 
@@ -97,7 +103,8 @@ EVP_PKEY *decode_secret_key_from_der_pkcs8(const char *algorithm_name, std::span
 {
     if (nullptr == algorithm_name || der_pkcs8.empty())
     {
-        GetLogger()->warn("decode_secret_key_from_der_pkcs8 called with null algorithm name or empty DER data.");
+        GetLogger()->debug("decode_secret_key_from_der_pkcs8 failed for algorithm {}, data size {}.",
+                           nullptr == algorithm_name ? "null" : algorithm_name, der_pkcs8.size());
         return nullptr;
     }
 
@@ -106,7 +113,7 @@ EVP_PKEY *decode_secret_key_from_der_pkcs8(const char *algorithm_name, std::span
                                                            EVP_PKEY_KEYPAIR, get_libctx(), get_propquery());
     if (nullptr == dctx)
     {
-        GetLogger()->error("Failed to create OSSL_DECODER_CTX for loading secret key.");
+        GetLogger()->err("Failed to create OSSL_DECODER_CTX for loading secret key.");
         return nullptr;
     }
 
@@ -114,13 +121,16 @@ EVP_PKEY *decode_secret_key_from_der_pkcs8(const char *algorithm_name, std::span
     std::size_t der_data_len = der_pkcs8.size();
     if (1 != OSSL_DECODER_from_data(dctx, &der_data, &der_data_len))
     {
-        GetLogger()->warn("Failed to decode DER PKCS#8 into EVP_PKEY using OSSL_DECODER_from_data.");
+        GetLogger()->debug("Failed to decode DER PKCS#8 into EVP_PKEY using OSSL_DECODER_from_data.");
         EVP_PKEY_free(pkey);
         OSSL_DECODER_CTX_free(dctx);
         return nullptr;
     }
 
     OSSL_DECODER_CTX_free(dctx);
+
+    GetLogger()->trace("Decoded secret key (address {:p}) from DER PKCS#8 for algorithm {}, data size {}.",
+                       static_cast<const void *>(pkey), algorithm_name, der_pkcs8.size());
     return pkey;
 }
 
@@ -128,7 +138,7 @@ SecureBuf encode_secret_key_to_der_pkcs8_with_type(vrf::Type type, const EVP_PKE
 {
     if (nullptr == pkey)
     {
-        GetLogger()->warn("encode_secret_key_to_der_pkcs8 called with null key.");
+        GetLogger()->debug("encode_secret_key_to_der_pkcs8_with_type called with null key.");
         return {};
     }
 
@@ -136,7 +146,7 @@ SecureBuf encode_secret_key_to_der_pkcs8_with_type(vrf::Type type, const EVP_PKE
         OSSL_ENCODER_CTX_new_for_pkey(pkey, EVP_PKEY_KEYPAIR, "DER", "PrivateKeyInfo", get_propquery());
     if (nullptr == ectx)
     {
-        GetLogger()->error("Failed to create OSSL_ENCODER_CTX for saving secret key.");
+        GetLogger()->err("Failed to create OSSL_ENCODER_CTX for saving secret key.");
         return {};
     }
 
@@ -144,7 +154,7 @@ SecureBuf encode_secret_key_to_der_pkcs8_with_type(vrf::Type type, const EVP_PKE
     std::size_t der_data_len = 0;
     if (1 != OSSL_ENCODER_to_data(ectx, &der_data, &der_data_len))
     {
-        GetLogger()->error("Failed to encode to DER PKCS#8 using OSSL_ENCODER_to_data.");
+        GetLogger()->err("Failed to encode to DER PKCS#8 using OSSL_ENCODER_to_data.");
         OSSL_ENCODER_CTX_free(ectx);
         return {};
     }
@@ -163,6 +173,8 @@ SecureBuf encode_secret_key_to_der_pkcs8_with_type(vrf::Type type, const EVP_PKE
     OPENSSL_free(der_data);
     OSSL_ENCODER_CTX_free(ectx);
 
+    GetLogger()->trace("Encoded secret key (address {:p}) to DER PKCS#8 for type {}, data size {}.",
+                       static_cast<const void *>(pkey), to_string(type), buf.size());
     return buf;
 }
 
@@ -175,10 +187,12 @@ EVP_PKEY *evp_pkey_upref(EVP_PKEY *pkey)
 
     if (1 != EVP_PKEY_up_ref(pkey))
     {
-        GetLogger()->error("Failed to increment reference count for EVP_PKEY.");
+        GetLogger()->err("Failed to increment reference count for EVP_PKEY (address {:p}).",
+                         static_cast<const void *>(pkey));
         return nullptr;
     }
 
+    GetLogger()->trace("Incremented reference count for EVP_PKEY (address {:p}).", static_cast<const void *>(pkey));
     return pkey;
 }
 
@@ -188,6 +202,7 @@ std::pair<vrf::Type, std::span<const std::byte>> extract_type_from_span(std::spa
     // data is empty, we return UNKNOWN as the type and an empty span.
     if (data.empty())
     {
+        GetLogger()->debug("extract_type_from_span called with empty data.");
         return {vrf::Type::UNKNOWN, std::span<const std::byte>{}};
     }
 
@@ -196,7 +211,7 @@ std::pair<vrf::Type, std::span<const std::byte>> extract_type_from_span(std::spa
     // First check that this is in range, i.e., less than vrf::Type::UNKNOWN.
     if (static_cast<std::size_t>(type_byte) >= static_cast<std::size_t>(vrf::Type::UNKNOWN))
     {
-        GetLogger()->warn("extract_type_from_span called with invalid type byte: {}", type_byte);
+        GetLogger()->debug("extract_type_from_span called with invalid type byte: {}", type_byte);
         return {vrf::Type::UNKNOWN, std::span<const std::byte>{}};
     }
 
@@ -207,6 +222,8 @@ std::pair<vrf::Type, std::span<const std::byte>> extract_type_from_span(std::spa
     const bool subspan_is_empty = data.size() <= 1;
     std::span<const std::byte> remaining_data = subspan_is_empty ? std::span<const std::byte>{} : data.subspan(1);
 
+    GetLogger()->trace("Extracted type {} from data span, remaining data size {} (start address {:p}).",
+                       to_string(type), remaining_data.size(), static_cast<const void *>(remaining_data.data()));
     return {type, remaining_data};
 }
 

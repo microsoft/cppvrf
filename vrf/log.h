@@ -112,6 +112,10 @@ class Logger
      */
     void set_level(LogLevel level)
     {
+        if (level > LogLevel::SUPPRESS)
+        {
+            level = LogLevel::SUPPRESS;
+        }
         std::lock_guard<std::mutex> lock{mtx_};
         log_level_ = level;
     }
@@ -179,7 +183,7 @@ class Logger
      * @param[in] fmt_str The format string.
      * @param[in] args The format arguments.
      */
-    template <typename... Args> void error(std::format_string<Args...> fmt_str, Args &&...args) const
+    template <typename... Args> void err(std::format_string<Args...> fmt_str, Args &&...args) const
     {
         log(LogLevel::ERR, fmt_str, std::forward<Args>(args)...);
     }

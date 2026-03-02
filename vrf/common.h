@@ -144,6 +144,20 @@ constexpr Curve nid_to_curve(int nid) noexcept
 }
 
 [[nodiscard]]
+constexpr const char *to_string(Curve curve) noexcept
+{
+    switch (curve)
+    {
+    case Curve::UNDEFINED:
+        return "undefined";
+    case Curve::PRIME256V1:
+        return "prime256v1";
+    default:
+        return "unknown";
+    }
+}
+
+[[nodiscard]]
 std::pair<vrf::Type, std::span<const std::byte>> extract_type_from_span(std::span<const std::byte> data);
 
 } // namespace vrf

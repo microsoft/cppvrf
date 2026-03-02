@@ -4,6 +4,7 @@
 #pragma once
 
 #include "vrf/guards.h"
+#include "vrf/log.h"
 #include "vrf/type.h"
 #include <algorithm>
 #include <cstddef>
@@ -53,6 +54,8 @@ std::size_t do_append_ecpoint_to_bytes(const EC_GROUP_Guard &group, PointToBytes
 {
     if (!group.has_value() || !pt.has_value() || !ensure_bcg_set(bcg, false))
     {
+        GetLogger()->debug(
+            "do_append_ecpoint_to_bytes called with invalid group or point, or failed to obtain BN_CTX.");
         return 0;
     }
 
@@ -60,6 +63,7 @@ std::size_t do_append_ecpoint_to_bytes(const EC_GROUP_Guard &group, PointToBytes
     std::size_t buf_size = pt_to_bytes(group, pt, bcg, {});
     if (0 == buf_size)
     {
+        GetLogger()->debug("do_append_ecpoint_to_bytes failed to get buffer size for point to bytes conversion.");
         return 0;
     }
 
@@ -67,11 +71,14 @@ std::size_t do_append_ecpoint_to_bytes(const EC_GROUP_Guard &group, PointToBytes
     buf_size = pt_to_bytes(group, pt, bcg, append_to_out);
     if (append_to_out.size() != buf_size)
     {
+        GetLogger()->debug(
+            "do_append_ecpoint_to_bytes failed to convert point to bytes; expected buffer size was {}, but {} "
+            "bytes were written.",
+            append_to_out.size(), buf_size);
         return 0;
     }
 
     std::copy(append_to_out.begin(), append_to_out.end(), out);
-
     return buf_size;
 }
 
@@ -83,7 +90,7 @@ std::pair<bool, std::size_t> append_ecpoint_to_bytes(const EC_GROUP_Guard &group
     bool success = true;
     std::size_t total_size = 0;
 
-    // Folder over the comma operator.
+    // Fold over the comma operator.
     (
         [&]() {
             const std::size_t written = do_append_ecpoint_to_bytes(group, p2b_method, bcg, out, points);
@@ -93,6 +100,9 @@ std::pair<bool, std::size_t> append_ecpoint_to_bytes(const EC_GROUP_Guard &group
         }(),
         ...);
 
+    GetLogger()->trace("append_ecpoint_to_bytes attempted to convert and append {} EC_POINTs to output iterator; "
+                       "success: {}, total bytes written: {}.",
+                       sizeof...(Points), success, total_size);
     return std::make_pair(success, total_size);
 }
 
