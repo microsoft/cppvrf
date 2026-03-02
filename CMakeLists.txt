@@ -96,7 +96,7 @@ include(CMakePackageConfigHelpers)
 configure_package_config_file(
     "${cppvrf_CONFIG_IN_FILENAME}" "${cppvrf_CONFIG_FILENAME}"
     INSTALL_DESTINATION "${cppvrf_CONFIG_INSTALL_DIR}"
-    PATH_VARS cppvrf_INCLUDES_INSTALL_DIR cppvrf_CONFIG_INSTALL_DIR
+    PATH_VARS cppvrf_INCLUDES_INSTALL_DIR
 )
 
 install(
