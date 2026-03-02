@@ -883,7 +883,7 @@ ECPublicKey::ECPublicKey(Type type, std::span<const std::byte> der_spki) : Publi
 {
     if (!is_ec_type(type))
     {
-        GetLogger()->warn("ECPublicKey constructor called with EC VRF type {}.", to_string(type));
+        GetLogger()->warn("ECPublicKey constructor called with non-EC VRF type {}.", to_string(type));
         return;
     }
 
