@@ -224,9 +224,9 @@ std::shared_ptr<Logger> NewDefaultLogger();
  * @brief Gets or replaces the global logger.
  * @param[in] new_logger If non-null, replaces the current global logger. If null, the current
  *   global logger is returned without replacing it.
- * @return A reference to the global logger.
+ * @return The new global logger.
  */
-std::shared_ptr<Logger> &GetOrSetLogger(std::shared_ptr<Logger> new_logger);
+std::shared_ptr<Logger> GetOrSetLogger(std::shared_ptr<Logger> new_logger);
 
 /**
  * @brief Gets the current global logger.
