@@ -32,132 +32,78 @@ std::unique_ptr<Proof> VRF::ProofFromBytes(std::span<const std::byte> data)
 {
     std::unique_ptr<Proof> proof = nullptr;
 
-    do
+    // Try first to deserialize as RSA VRF proof.
+    proof = std::make_unique<rsa::RSAProof>();
+    proof->from_bytes(data);
+    if (proof->is_initialized())
     {
-        // Try first to deserialize as RSA VRF proof.
-        proof.reset(new rsa::RSAProof{});
-        if (nullptr == proof)
-        {
-            GetLogger()->err("Failed to allocate memory for RSA VRF proof.");
-            return nullptr;
-        }
-        proof->from_bytes(data);
-        if (proof->is_initialized())
-        {
-            GetLogger()->trace("Successfully deserialized RSA VRF proof.");
-            break;
-        }
-
-        // Next try to deserialize as EC VRF proof.
-        proof.reset(new ec::ECProof{});
-        if (nullptr == proof)
-        {
-            GetLogger()->err("Failed to allocate memory for EC VRF proof.");
-            return nullptr;
-        }
-        proof->from_bytes(data);
-        if (proof->is_initialized())
-        {
-            GetLogger()->trace("Successfully deserialized EC VRF proof.");
-            break;
-        }
-    } while (false);
-
-    if (!proof->is_initialized())
-    {
-        GetLogger()->warn("Failed to deserialize VRF proof.");
-        return nullptr;
+        GetLogger()->trace("Successfully deserialized RSA VRF proof.");
+        return proof;
     }
 
-    return proof;
+    // Next try to deserialize as EC VRF proof.
+    proof = std::make_unique<ec::ECProof>();
+    proof->from_bytes(data);
+    if (proof->is_initialized())
+    {
+        GetLogger()->trace("Successfully deserialized EC VRF proof.");
+        return proof;
+    }
+
+    GetLogger()->warn("Failed to deserialize VRF proof.");
+    return nullptr;
 }
 
 std::unique_ptr<PublicKey> VRF::PublicKeyFromBytes(std::span<const std::byte> data)
 {
     std::unique_ptr<PublicKey> pk = nullptr;
 
-    do
+    // Try first to deserialize as RSA VRF public key.
+    pk = std::make_unique<rsa::RSAPublicKey>();
+    pk->from_bytes(data);
+    if (pk->is_initialized())
     {
-        // Try first to deserialize as RSA VRF public key.
-        pk.reset(new rsa::RSAPublicKey{});
-        if (nullptr == pk)
-        {
-            GetLogger()->err("Failed to allocate memory for RSA VRF public key.");
-            return nullptr;
-        }
-        pk->from_bytes(data);
-        if (pk->is_initialized())
-        {
-            GetLogger()->trace("Successfully deserialized RSA VRF public key.");
-            break;
-        }
-
-        // Next try to deserialize as EC VRF proof.
-        pk.reset(new ec::ECPublicKey{});
-        if (nullptr == pk)
-        {
-            GetLogger()->err("Failed to allocate memory for EC VRF public key.");
-            return nullptr;
-        }
-        pk->from_bytes(data);
-        if (pk->is_initialized())
-        {
-            GetLogger()->trace("Successfully deserialized EC VRF public key.");
-            break;
-        }
-    } while (false);
-
-    if (!pk->is_initialized())
-    {
-        GetLogger()->warn("Failed to deserialize VRF public key.");
-        return nullptr;
+        GetLogger()->trace("Successfully deserialized RSA VRF public key.");
+        return pk;
     }
 
-    return pk;
+    // Next try to deserialize as EC VRF proof.
+    pk = std::make_unique<ec::ECPublicKey>();
+    pk->from_bytes(data);
+    if (pk->is_initialized())
+    {
+        GetLogger()->trace("Successfully deserialized EC VRF public key.");
+        return pk;
+    }
+
+    GetLogger()->warn("Failed to deserialize VRF public key.");
+    return nullptr;
 }
 
 std::unique_ptr<SecretKey> VRF::SecretKeyFromBytes(std::span<const std::byte> data)
 {
     std::unique_ptr<SecretKey> sk = nullptr;
 
-    do
+    // Try first to deserialize as RSA VRF secret key.
+    sk = std::make_unique<rsa::RSASecretKey>();
+    sk->from_bytes(data);
+    if (sk->is_initialized())
     {
-        // Try first to deserialize as RSA VRF secret key.
-        sk.reset(new rsa::RSASecretKey{});
-        if (nullptr == sk)
-        {
-            GetLogger()->err("Failed to allocate memory for RSA VRF secret key.");
-            return nullptr;
-        }
-        sk->from_bytes(data);
-        if (sk->is_initialized())
-        {
-            GetLogger()->trace("Successfully deserialized RSA VRF secret key.");
-            break;
-        }
-
-        // Next try to deserialize as EC VRF secret key.
-        sk.reset(new ec::ECSecretKey{});
-        if (nullptr == sk)
-        {
-            GetLogger()->err("Failed to allocate memory for EC VRF secret key.");
-            return nullptr;
-        }
-        sk->from_bytes(data);
-        if (sk->is_initialized())
-        {
-            GetLogger()->trace("Successfully deserialized EC VRF secret key.");
-            break;
-        }
-    } while (false);
-
-    if (!sk->is_initialized())
-    {
-        GetLogger()->warn("Failed to deserialize VRF secret key.");
-        return nullptr;
+        GetLogger()->trace("Successfully deserialized RSA VRF secret key.");
+        return sk;
     }
 
-    return sk;
+    // Next try to deserialize as EC VRF secret key.
+    sk = std::make_unique<ec::ECSecretKey>();
+    sk->from_bytes(data);
+    if (sk->is_initialized())
+    {
+        GetLogger()->trace("Successfully deserialized EC VRF secret key.");
+        return sk;
+    }
+
+    GetLogger()->warn("Failed to deserialize VRF secret key.");
+    return nullptr;
 }
 
 } // namespace vrf

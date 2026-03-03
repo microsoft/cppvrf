@@ -332,6 +332,12 @@ std::vector<std::byte> ECProof::get_vrf_value() const
 
 std::vector<std::byte> ECProof::to_bytes()
 {
+    if (!is_initialized())
+    {
+        GetLogger()->warn("ECProof::to_bytes called on an incorrectly initialized proof.");
+        return {};
+    }
+
     const std::byte type_byte = as_byte(get_type());
     std::vector<std::byte> ret;
     ret.reserve(1 + proof_.size());

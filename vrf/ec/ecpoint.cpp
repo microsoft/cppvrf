@@ -43,7 +43,7 @@ std::optional<bool> try_subtract_reduce_mod_group_order(BIGNUM_Guard &bn, const 
 
     if (1 != BN_sub(bn.get(), bn.get(), order))
     {
-        GetLogger()->debug("Call to BN_sub failed in try_subtract_reduce_mod_group_order.");
+        GetLogger()->err("Call to BN_sub failed in try_subtract_reduce_mod_group_order.");
         return std::nullopt;
     }
 
@@ -91,7 +91,7 @@ bool reduce_mod_group_order(BIGNUM_Guard &bn, const EC_GROUP_Guard &group, BN_CT
 
     if (1 != BN_nnmod(bn_temp.get(), bn.get(), order, bcg.get()) || nullptr == BN_copy(bn.get(), bn_temp.get()))
     {
-        GetLogger()->warn("Call to BN_mod or BN_copy failed in reduce_mod_group_order.");
+        GetLogger()->err("Call to BN_mod or BN_copy failed in reduce_mod_group_order.");
         return false;
     }
 
@@ -181,7 +181,7 @@ bool ScalarType::set_random(const EC_GROUP_Guard &group)
     BIGNUM_Guard bn_temp{secure};
     if (1 != BN_priv_rand_ex(bn_temp.get(), random_bits, BN_RAND_TOP_ANY, BN_RAND_BOTTOM_ANY, prg_strength, bcg.get()))
     {
-        GetLogger()->debug("Call to BN_priv_rand_ex failed in set_random.");
+        GetLogger()->err("Call to BN_priv_rand_ex failed in set_random.");
         return false;
     }
 
@@ -254,7 +254,7 @@ bool ScalarType::negate(const EC_GROUP_Guard &group, BN_CTX_Guard &bcg)
     // bn_temp = order - scalar_
     if (1 != BN_sub(bn_temp.get(), order, scalar_.get()))
     {
-        GetLogger()->debug("Call to BN_sub failed in negate.");
+        GetLogger()->err("Call to BN_sub failed in negate.");
         return false;
     }
 
@@ -295,7 +295,7 @@ bool ScalarType::add(const ScalarType &rhs, const EC_GROUP_Guard &group, BN_CTX_
         if (1 != BN_mod_add(bn_temp.get(), scalar_.get(), rhs.scalar_.get(), order, bcg.get()) ||
             nullptr == BN_copy(scalar_.get(), bn_temp.get()))
         {
-            GetLogger()->debug("Call to BN_mod_add or BN_copy failed in add.");
+            GetLogger()->err("Call to BN_mod_add or BN_copy failed in add.");
             return false;
         }
     }
@@ -305,7 +305,7 @@ bool ScalarType::add(const ScalarType &rhs, const EC_GROUP_Guard &group, BN_CTX_
         if (1 != BN_add(scalar_.get(), scalar_.get(), rhs.scalar_.get()) ||
             !reduce_mod_group_order(scalar_, group, bcg))
         {
-            GetLogger()->debug("Call to BN_add or reduce_mod_group_order failed in add.");
+            GetLogger()->err("Call to BN_add or reduce_mod_group_order failed in add.");
             return false;
         }
     }
@@ -339,7 +339,7 @@ bool ScalarType::subtract(const ScalarType &rhs, const EC_GROUP_Guard &group, BN
     {
         if (1 != BN_sub(scalar_.get(), scalar_.get(), rhs.scalar_.get()))
         {
-            GetLogger()->debug("Call to BN_sub failed in subtract.");
+            GetLogger()->err("Call to BN_sub failed in subtract.");
             return false;
         }
     }
@@ -349,7 +349,7 @@ bool ScalarType::subtract(const ScalarType &rhs, const EC_GROUP_Guard &group, BN
         if (1 != BN_add(scalar_.get(), scalar_.get(), order) ||
             1 != BN_sub(scalar_.get(), scalar_.get(), rhs.scalar_.get()))
         {
-            GetLogger()->debug("Call to BN_add or BN_sub failed in subtract.");
+            GetLogger()->err("Call to BN_add or BN_sub failed in subtract.");
             return false;
         }
     }
@@ -538,7 +538,7 @@ bool ECPoint::double_scalar_multiply(const EC_GROUP_Guard &group, const ScalarTy
 
     if (1 != EC_POINT_mul(group.get(), pt_.get(), scalar2.get().get(), pt_.get(), scalar1.get().get(), bcg.get()))
     {
-        GetLogger()->debug("Call to EC_POINT_mul failed in double_scalar_multiply.");
+        GetLogger()->err("Call to EC_POINT_mul failed in double_scalar_multiply.");
         return false;
     }
 
@@ -572,7 +572,7 @@ bool ECPoint::add(const EC_GROUP_Guard &group, const ECPoint &other, BN_CTX_Guar
 
     if (1 != EC_POINT_add(group.get(), pt_.get(), pt_.get(), other.pt_.get(), bcg.get()))
     {
-        GetLogger()->debug("Call to EC_POINT_add failed in add.");
+        GetLogger()->err("Call to EC_POINT_add failed in add.");
         return false;
     }
 
@@ -595,7 +595,7 @@ bool ECPoint::negate(const EC_GROUP_Guard &group, BN_CTX_Guard &bcg)
 
     if (1 != EC_POINT_invert(group.get(), pt_.get(), bcg.get()))
     {
-        GetLogger()->debug("Call to EC_POINT_invert failed in negate.");
+        GetLogger()->err("Call to EC_POINT_invert failed in negate.");
         return false;
     }
 

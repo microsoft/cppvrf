@@ -29,12 +29,12 @@ concept CharKind =
 
 template <CharKind C> constexpr int hexval(C c) noexcept
 {
-    C zero = static_cast<C>('0');
-    C nine = static_cast<C>('9');
-    C a_lower = static_cast<C>('a');
-    C f_lower = static_cast<C>('f');
-    C A_upper = static_cast<C>('A');
-    C F_upper = static_cast<C>('F');
+    const C zero = static_cast<C>('0');
+    const C nine = static_cast<C>('9');
+    const C a_lower = static_cast<C>('a');
+    const C f_lower = static_cast<C>('f');
+    const C A_upper = static_cast<C>('A');
+    const C F_upper = static_cast<C>('F');
 
     if (c >= zero && c <= nine)
     {

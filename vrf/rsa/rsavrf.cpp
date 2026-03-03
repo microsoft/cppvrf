@@ -574,6 +574,12 @@ std::vector<std::byte> construct_rsa_pss_tbs(Type type, std::span<const std::byt
 
 std::vector<std::byte> RSAProof::to_bytes()
 {
+    if (!is_initialized())
+    {
+        GetLogger()->warn("RSAProof::to_bytes called on uninitialized proof.");
+        return {};
+    }
+
     const std::byte type_byte = as_byte(get_type());
     std::vector<std::byte> ret;
     ret.reserve(1 + proof_.size());
@@ -717,7 +723,7 @@ std::unique_ptr<Proof> RSASecretKey::get_vrf_proof(std::span<const std::byte> in
         break;
     }
 
-    if (nullptr != ret && ret->is_initialized())
+    if (ret->is_initialized())
     {
         GetLogger()->trace("RSASecretKey::get_vrf_proof generated proof of size {} for VRF type {}.",
                            ret->to_bytes().size(), to_string(type));

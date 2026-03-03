@@ -206,7 +206,7 @@ std::pair<vrf::Type, std::span<const std::byte>> extract_type_from_span(std::spa
         return {vrf::Type::UNKNOWN, std::span<const std::byte>{}};
     }
 
-    const std::uint8_t type_byte = static_cast<std::uint8_t>(data[0]);
+    const std::uint8_t type_byte = std::to_integer<std::uint8_t>(data[0]);
 
     // First check that this is in range, i.e., less than vrf::Type::UNKNOWN.
     if (static_cast<std::size_t>(type_byte) >= static_cast<std::size_t>(vrf::Type::UNKNOWN))
