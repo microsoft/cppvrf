@@ -6,7 +6,7 @@
 namespace vrf
 {
 
-std::shared_ptr<Logger> &GetOrSetLogger(std::shared_ptr<Logger> new_logger = nullptr)
+std::shared_ptr<Logger> GetOrSetLogger(std::shared_ptr<Logger> new_logger = nullptr)
 {
     static std::shared_ptr<Logger> logger = NewDefaultLogger();
     if (nullptr != new_logger)

@@ -14,11 +14,11 @@ The easiest way to include `cppvrf` in your CMake project is using [vcpkg](https
 To build `cppvrf`, ensure [vcpkg](https://GitHub.com/Microsoft/vcpkg) is installed (and the environment variable `VCPKG_ROOT` is set).
 Then run
 ```bash
-cmake -S . --preset <preset-name>
-cmake --build --preset <preset-name>
-cmake --install out/build/<preset-name> # optional; to install in custom destination, include --prefix <destination>
+cmake -S . --preset <configure-preset-name>
+cmake --build --preset <build-preset-name>
+cmake --install out/build/<build-preset-name> # optional; to install in custom destination, include --prefix <destination>
 ```
-The list of available options for `<preset-name>` can be seen by running `cmake --list-presets`.
+The list of available options for `<preset-name>` can be seen by running `cmake --list-presets=all`.
 The presets will automatically build the test and benchmark suites.
 After building, the executables `vrf_tests[.exe]` and `vrf_benchmarks[.exe]` are available in `out/build/<preset-name>/bin`.
 
@@ -82,16 +82,14 @@ if (!pk || !pk->is_initialized()) {
 
 The public key can be serialized (to a DER-encoded SPKI struct) and deserialized as follows:
 ```cpp
-// To serialize
+// The to_bytes member function serializes the VRF type as the first byte of
+// the output, followed by an encoding of the public key.
 std::vector<std::byte> der_spki = pk->to_bytes();
 if (der_spki.empty()) {
     throw std::runtime_error("Failed to serialize public key");
 }
 
-// To deserialize, the caller is responsible for providing the correct type as input.
-// If a type for which the deserialized key is not valid is provided, pk2->is_initialized()
-// will return false.
-std::unique_ptr<vrf::PublicKey> pk2 = vrf::VRF::public_key_from_bytes(type, der_spki);
+std::unique_ptr<vrf::PublicKey> pk2 = vrf::VRF::PublicKeyFromBytes(der_spki);
 if (!pk2 || !pk2->is_initialized()) {
     throw std::runtime_error("Deserialization failed");
 }
@@ -100,14 +98,12 @@ if (!pk2 || !pk2->is_initialized()) {
 The secret key can be serialized to a `vrf::SecureBuf`, which uses OpenSSL secure memory that is zeroed on destruction.
 For EC-based VRFs, the serialized form is the raw scalar bytes; for RSA-based VRFs, it is a DER-encoded PKCS#8 structure.
 ```cpp
-// To serialize
 vrf::SecureBuf sk_bytes = sk->to_secure_bytes();
 if (!sk_bytes.has_value()) {
     throw std::runtime_error("Failed to serialize secret key");
 }
 
-// To deserialize, the caller is responsible for providing the correct type as input.
-std::unique_ptr<vrf::SecretKey> sk2 = vrf::VRF::SecretKeyFromBytes(type, sk_bytes);
+std::unique_ptr<vrf::SecretKey> sk2 = vrf::VRF::SecretKeyFromBytes(sk_bytes);
 if (!sk2 || !sk2->is_initialized()) {
     throw std::runtime_error("Deserialization failed");
 }
@@ -132,25 +128,29 @@ if (!res.first) {
     throw std::runtime_error("Proof verification failed");
 }
 
-// The proof verified successfully and hash is a byte array that holds the VRF value.
+// If res.first is true, the VRF value is in the second value of the pair.
+std::vector<std::byte> hash1 = res.first;
+
 // The VRF value can also be obtained directly from the proof object as follows.
 // However, this does *not* verify the proof!
-std::vector<std::byte> hash2 = res.second->get_vrf_value();
+std::vector<std::byte> hash2 = proof->get_vrf_value();
 if (hash2.empty()) {
     throw std::runtime_error("Failed to extract VRF value");
+}
+
+if (hash1 != hash2) {
+    throw std::runtime_error("This should never be reached");
 }
 ```
 
 The proof can be serialized and deserialized as follows:
 ```cpp
-// To serialize
 std::vector<std::byte> proof_bytes = proof->to_bytes();
 if (proof_bytes.empty()) {
     throw std::runtime_error("Failed to serialize proof");
 }
 
-// To deserialize
-std::unique_ptr<vrf::Proof> proof2 = vrf::VRF::proof_from_bytes(type, proof_bytes);
+std::unique_ptr<vrf::Proof> proof2 = vrf::VRF::ProofFromBytes(proof_bytes);
 if (!proof2 || !proof2->is_initialized()) {
     throw std::runtime_error("Deserialization failed");
 }
