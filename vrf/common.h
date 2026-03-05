@@ -49,11 +49,7 @@ constexpr bool add_with_overflow(T a, S b, unsigned_common_t<T, S> &c) noexcept
     const U au = static_cast<U>(a);
     const U bu = static_cast<U>(b);
     c = au + bu;
-    if (au > std::numeric_limits<U>::max() - bu)
-    {
-        return true;
-    }
-    return false;
+    return au > std::numeric_limits<U>::max() - bu;
 }
 
 template <std::unsigned_integral... Ts>
@@ -83,8 +79,8 @@ enum class BytesToIntMethod
 
 using bytes_to_int_ptr_t = BIGNUM_Guard (*)(std::span<const std::byte> in, bool secure);
 
-extern bytes_to_int_ptr_t bytes_to_int_big_endian;
-extern bytes_to_int_ptr_t bytes_to_int_little_endian;
+extern const bytes_to_int_ptr_t bytes_to_int_big_endian;
+extern const bytes_to_int_ptr_t bytes_to_int_little_endian;
 
 [[nodiscard]]
 constexpr bytes_to_int_ptr_t get_bytes_to_int_method(BytesToIntMethod method)
@@ -102,8 +98,8 @@ constexpr bytes_to_int_ptr_t get_bytes_to_int_method(BytesToIntMethod method)
 
 using int_to_bytes_ptr_t = std::size_t (*)(const BIGNUM_Guard &bn, std::span<std::byte> out);
 
-extern int_to_bytes_ptr_t int_to_bytes_big_endian;
-extern int_to_bytes_ptr_t int_to_bytes_little_endian;
+extern const int_to_bytes_ptr_t int_to_bytes_big_endian;
+extern const int_to_bytes_ptr_t int_to_bytes_little_endian;
 
 [[nodiscard]]
 constexpr int_to_bytes_ptr_t get_int_to_bytes_method(BytesToIntMethod method)

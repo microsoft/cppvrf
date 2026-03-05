@@ -204,7 +204,7 @@ std::vector<std::byte> rsa_signing_primitive(std::span<const std::byte> tbs, RSA
 
     // Verify that the signature was computed correctly. This is standard practice for RSA signatures.
     const std::vector<std::byte> verified_message = rsa_verification_primitive(signature, pk_guard);
-    if (!std::equal(verified_message.begin(), verified_message.end(), tbs.begin(), tbs.end()))
+    if (!std::ranges::equal(verified_message, tbs))
     {
         GetLogger()->err("rsa_signing_primitive produced an invalid signature.");
         return {};
@@ -412,10 +412,10 @@ bool mgf1(std::span<std::byte> mask, std::span<const std::byte> seed, const EVP_
     for (std::uint32_t i = 0; outlen < len; i++)
     {
         // Set the counter value for this iteration.
-        ctr[0] = static_cast<std::byte>((i >> 24) & 0xFF);
-        ctr[1] = static_cast<std::byte>((i >> 16) & 0xFF);
-        ctr[2] = static_cast<std::byte>((i >> 8) & 0xFF);
-        ctr[3] = static_cast<std::byte>(i & 0xFF);
+        ctr[0] = static_cast<std::byte>((i >> 24U) & 0xFFU);
+        ctr[1] = static_cast<std::byte>((i >> 16U) & 0xFFU);
+        ctr[2] = static_cast<std::byte>((i >> 8U) & 0xFFU);
+        ctr[3] = static_cast<std::byte>(i & 0xFFU);
 
         if (!EVP_DigestInit_ex(mctx.get(), dgst, nullptr) || !EVP_DigestUpdate(mctx.get(), seed.data(), seedlen) ||
             !EVP_DigestUpdate(mctx.get(), ctr.data(), ctr.size()))
@@ -475,7 +475,7 @@ std::vector<std::byte> construct_rsa_fdh_tbs(Type type, std::span<const std::byt
     const std::size_t suite_string_len = params.suite_string.size();
     const std::size_t n_len = (params.bits + 7) / 8;
     const std::optional<std::size_t> tbs_len =
-        safe_add(suite_string_len, 1u /* domain separator */, mgf1_salt.size(), data.size());
+        safe_add(suite_string_len, 1U /* domain separator */, mgf1_salt.size(), data.size());
 
     // Set up the seed for MGF1,
     if (!tbs_len.has_value() || !std::in_range<std::ptrdiff_t>(*tbs_len))
@@ -492,11 +492,11 @@ std::vector<std::byte> construct_rsa_fdh_tbs(Type type, std::span<const std::byt
     const auto mgf1_salt_start = domain_separator_pos + 1;
     const auto data_start = mgf1_salt_start + static_cast<std::ptrdiff_t>(mgf1_salt.size());
 
-    std::transform(params.suite_string.begin(), params.suite_string.end(), suite_string_start,
-                   [](char c) { return static_cast<std::byte>(c); });
+    std::ranges::transform(params.suite_string, suite_string_start,
+                           [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_pos = domain_separator;
-    std::copy(mgf1_salt.begin(), mgf1_salt.end(), mgf1_salt_start);
-    std::copy(data.begin(), data.end(), data_start);
+    std::ranges::copy(mgf1_salt, mgf1_salt_start);
+    std::ranges::copy(data, data_start);
 
     // Evaluate MGF1. The output *must* have size `n_len` bytes. Otherwise, raw RSA signing will fail.
     std::vector<std::byte> ret(n_len);
@@ -542,7 +542,7 @@ std::vector<std::byte> construct_rsa_pss_tbs(Type type, std::span<const std::byt
 
     const std::size_t suite_string_len = params.suite_string.size();
     const std::optional<std::size_t> tbs_len =
-        safe_add(suite_string_len, 1u /* domain separator */, mgf1_salt.size(), data.size());
+        safe_add(suite_string_len, 1U /* domain separator */, mgf1_salt.size(), data.size());
     if (!tbs_len.has_value() || !std::in_range<std::ptrdiff_t>(*tbs_len))
     {
         GetLogger()->debug("construct_rsa_pss_tbs computed TBS length ({}) is invalid or too large.",
@@ -557,11 +557,11 @@ std::vector<std::byte> construct_rsa_pss_tbs(Type type, std::span<const std::byt
     const auto mgf1_salt_start = domain_separator_start + 1;
     const auto data_start = mgf1_salt_start + static_cast<std::ptrdiff_t>(mgf1_salt.size());
 
-    std::transform(params.suite_string.begin(), params.suite_string.end(), suite_string_start,
-                   [](char c) { return static_cast<std::byte>(c); });
+    std::ranges::transform(params.suite_string, suite_string_start,
+                           [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_start = domain_separator;
-    std::copy(mgf1_salt.begin(), mgf1_salt.end(), mgf1_salt_start);
-    std::copy(data.begin(), data.end(), data_start);
+    std::ranges::copy(mgf1_salt, mgf1_salt_start);
+    std::ranges::copy(data, data_start);
 
     GetLogger()->trace(
         "construct_rsa_pss_tbs constructed TBS of size {} for RSA-PSS VRF type {} (suite string length {}, "
@@ -572,7 +572,7 @@ std::vector<std::byte> construct_rsa_pss_tbs(Type type, std::span<const std::byt
 
 } // namespace
 
-std::vector<std::byte> RSAProof::to_bytes()
+std::vector<std::byte> RSAProof::to_bytes() const
 {
     if (!is_initialized())
     {
@@ -608,18 +608,7 @@ void RSAProof::from_bytes(std::span<const std::byte> data)
     *this = std::move(rsa_proof);
 }
 
-RSAProof::RSAProof(const RSAProof &source)
-{
-    RSAProof proof_copy{source.get_type(), source.proof_};
-    if (!proof_copy.is_initialized())
-    {
-        GetLogger()->warn("RSAProof copy constructor failed to initialize the copied proof.");
-        return;
-    }
-
-    GetLogger()->trace("RSAProof copy constructor initialized proof copy.");
-    *this = std::move(proof_copy);
-}
+RSAProof::RSAProof(const RSAProof &source) = default;
 
 RSAProof &RSAProof::operator=(RSAProof &&rhs) noexcept
 {
@@ -649,7 +638,7 @@ std::vector<std::byte> RSAProof::get_vrf_value() const
     const std::byte domain_separator = std::byte{0x02};
 
     const std::size_t suite_string_len = params.suite_string.size();
-    const std::optional<std::size_t> tbh_len = safe_add(suite_string_len, 1u /* domain separator */, proof_.size());
+    const std::optional<std::size_t> tbh_len = safe_add(suite_string_len, 1U /* domain separator */, proof_.size());
 
     if (!tbh_len.has_value() || !std::in_range<std::ptrdiff_t>(*tbh_len))
     {
@@ -664,10 +653,10 @@ std::vector<std::byte> RSAProof::get_vrf_value() const
     const auto domain_separator_pos = suite_string_start + static_cast<std::ptrdiff_t>(suite_string_len);
     const auto proof_start = domain_separator_pos + 1;
 
-    std::transform(params.suite_string.begin(), params.suite_string.end(), suite_string_start,
-                   [](char c) { return static_cast<std::byte>(c); });
+    std::ranges::transform(params.suite_string, suite_string_start,
+                           [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_pos = domain_separator;
-    std::copy(proof_.begin(), proof_.end(), proof_start);
+    std::ranges::copy(proof_, proof_start);
 
     GetLogger()->trace("RSAProof::get_vrf_value constructed TBH of size {} for VRF type {} (suite string length {}, "
                        "proof length {}).",
@@ -703,6 +692,7 @@ std::unique_ptr<Proof> RSASecretKey::get_vrf_proof(std::span<const std::byte> in
             return nullptr;
         }
 
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         ret.reset(new RSAProof{type, std::move(signature)});
         break;
     }
@@ -715,6 +705,7 @@ std::unique_ptr<Proof> RSASecretKey::get_vrf_proof(std::span<const std::byte> in
             return nullptr;
         }
 
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         ret.reset(new RSAProof{type, std::move(signature)});
         break;
     }
@@ -731,7 +722,7 @@ std::unique_ptr<Proof> RSASecretKey::get_vrf_proof(std::span<const std::byte> in
     return ret;
 }
 
-RSASecretKey::RSASecretKey(Type type) : SecretKey{Type::UNKNOWN}, sk_guard_{}, pk_guard_{}, mgf1_salt_{}
+RSASecretKey::RSASecretKey(Type type) : SecretKey{Type::UNKNOWN}
 {
     RSA_SK_Guard sk_guard{type};
     if (!sk_guard.has_value())
@@ -763,7 +754,7 @@ RSASecretKey::RSASecretKey(Type type) : SecretKey{Type::UNKNOWN}, sk_guard_{}, p
                        to_string(type));
 }
 
-RSASecretKey::RSASecretKey(RSA_SK_Guard sk_guard) : SecretKey{Type::UNKNOWN}, sk_guard_{}, pk_guard_{}, mgf1_salt_{}
+RSASecretKey::RSASecretKey(RSA_SK_Guard sk_guard) : SecretKey{Type::UNKNOWN}
 {
     if (!sk_guard.has_value())
     {
@@ -810,7 +801,7 @@ RSASecretKey &RSASecretKey::operator=(RSASecretKey &&rhs) noexcept
     return *this;
 }
 
-RSASecretKey::RSASecretKey(const RSASecretKey &source) : sk_guard_{}, pk_guard_{}, mgf1_salt_{}
+RSASecretKey::RSASecretKey(const RSASecretKey &source) : SecretKey(source)
 {
     if (!source.is_initialized())
     {
@@ -842,7 +833,7 @@ RSASecretKey::RSASecretKey(const RSASecretKey &source) : sk_guard_{}, pk_guard_{
     GetLogger()->trace("RSASecretKey copy constructor initialized secret key copy.");
 }
 
-std::unique_ptr<PublicKey> RSASecretKey::get_public_key()
+std::unique_ptr<PublicKey> RSASecretKey::get_public_key() const
 {
     if (!is_initialized())
     {
@@ -863,13 +854,13 @@ std::unique_ptr<PublicKey> RSASecretKey::get_public_key()
     return public_key;
 }
 
-std::vector<std::byte> RSASecretKey::to_bytes()
+std::vector<std::byte> RSASecretKey::to_bytes() const
 {
     GetLogger()->err("RSASecretKey::to_bytes is disabled; use to_secure_bytes() instead.");
     return {};
 }
 
-SecureBuf RSASecretKey::to_secure_bytes()
+SecureBuf RSASecretKey::to_secure_bytes() const
 {
     if (!is_initialized())
     {
@@ -913,7 +904,7 @@ void RSASecretKey::from_bytes(std::span<const std::byte> data)
     *this = std::move(secret_key);
 }
 
-RSAPublicKey::RSAPublicKey(const RSAPublicKey &source) : PublicKey{Type::UNKNOWN}, pk_guard_{}, mgf1_salt_{}
+RSAPublicKey::RSAPublicKey(const RSAPublicKey &source) : PublicKey{Type::UNKNOWN}
 {
     RSA_PK_Guard pk_guard_copy = source.pk_guard_.clone();
     if (pk_guard_copy.has_value() != source.pk_guard_.has_value())
@@ -947,7 +938,7 @@ RSAPublicKey &RSAPublicKey::operator=(RSAPublicKey &&rhs) noexcept
 }
 
 RSAPublicKey::RSAPublicKey(std::span<const std::byte> der_spki_with_type)
-    : PublicKey{Type::UNKNOWN}, pk_guard_{}, mgf1_salt_{}
+    : PublicKey{Type::UNKNOWN}
 {
     RSA_PK_Guard pk_guard{der_spki_with_type};
     if (!pk_guard.has_value())
@@ -971,7 +962,7 @@ RSAPublicKey::RSAPublicKey(std::span<const std::byte> der_spki_with_type)
                        to_string(get_type()));
 }
 
-RSAPublicKey::RSAPublicKey(Type type, RSA_PK_Guard pk_guard) : PublicKey{Type::UNKNOWN}, pk_guard_{}, mgf1_salt_{}
+RSAPublicKey::RSAPublicKey(Type type, RSA_PK_Guard pk_guard) : PublicKey{Type::UNKNOWN}
 {
     if (!pk_guard.has_value())
     {
@@ -994,7 +985,7 @@ RSAPublicKey::RSAPublicKey(Type type, RSA_PK_Guard pk_guard) : PublicKey{Type::U
                        to_string(type));
 }
 
-std::vector<std::byte> RSAPublicKey::to_bytes()
+std::vector<std::byte> RSAPublicKey::to_bytes() const
 {
     if (!is_initialized())
     {

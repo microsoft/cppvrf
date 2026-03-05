@@ -161,7 +161,7 @@ class EVP_PKEY_CTX_Guard
 class MD_CTX_Guard
 {
   public:
-    MD_CTX_Guard(bool oneshot_only);
+    explicit MD_CTX_Guard(bool oneshot_only);
 
     ~MD_CTX_Guard()
     {
@@ -204,7 +204,7 @@ class EC_GROUP_Guard
   public:
     EC_GROUP_Guard() = default;
 
-    EC_GROUP_Guard(Curve curve);
+    explicit EC_GROUP_Guard(Curve curve);
 
     EC_GROUP_Guard &operator=(const EC_GROUP_Guard &) = delete;
 
@@ -259,7 +259,7 @@ class BIGNUM_Guard
   public:
     BIGNUM_Guard() = default;
 
-    BIGNUM_Guard(bool secure);
+    explicit BIGNUM_Guard(bool secure);
 
     BIGNUM_Guard(BIGNUM *bn, bool owned) : bn_(bn), owned_(owned)
     {
@@ -318,7 +318,7 @@ class BN_CTX_Guard
   public:
     BN_CTX_Guard() = default;
 
-    BN_CTX_Guard(bool secure);
+    explicit BN_CTX_Guard(bool secure);
 
     BN_CTX_Guard &operator=(const BN_CTX_Guard &) = delete;
 
@@ -381,7 +381,7 @@ class EC_POINT_Guard
 
     EC_POINT_Guard(Curve curve, EC_POINT *ec_pt, BN_CTX_Guard &bcg);
 
-    EC_POINT_Guard(const EC_GROUP_Guard &group);
+    explicit EC_POINT_Guard(const EC_GROUP_Guard &group);
 
     EC_POINT_Guard &operator=(const EC_POINT_Guard &) = delete;
 

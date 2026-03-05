@@ -26,7 +26,7 @@ enum class Type : std::size_t
     UNKNOWN
 };
 
-inline constexpr bool is_rsa_type(Type type)
+constexpr bool is_rsa_type(Type type)
 {
     return type == Type::RSA_FDH_VRF_RSA2048_SHA256 || type == Type::RSA_FDH_VRF_RSA3072_SHA256 ||
            type == Type::RSA_FDH_VRF_RSA4096_SHA384 || type == Type::RSA_FDH_VRF_RSA4096_SHA512 ||
@@ -34,12 +34,12 @@ inline constexpr bool is_rsa_type(Type type)
            type == Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA384 || type == Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA512;
 }
 
-inline constexpr bool is_ec_type(Type type)
+constexpr bool is_ec_type(Type type)
 {
     return type == Type::EC_VRF_P256_SHA256_TAI;
 }
 
-inline constexpr std::string_view to_string(Type type)
+constexpr std::string_view to_string(Type type)
 {
     switch (type)
     {
@@ -66,13 +66,13 @@ inline constexpr std::string_view to_string(Type type)
     }
 }
 
-inline constexpr std::byte as_byte(Type type)
+constexpr std::byte as_byte(Type type)
 {
     static_assert(std::in_range<std::uint8_t>(static_cast<std::size_t>(Type::UNKNOWN)));
     return static_cast<std::byte>(type);
 }
 
-inline constexpr Type from_byte(std::byte b)
+constexpr Type from_byte(std::byte b)
 {
     const std::size_t value = static_cast<std::size_t>(b);
     if (static_cast<std::size_t>(Type::UNKNOWN) < value)

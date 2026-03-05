@@ -28,7 +28,7 @@ class SecureBuf
 
     SecureBuf &operator=(SecureBuf &&rhs) noexcept;
 
-    SecureBuf(SecureBuf &&other) noexcept : size_(0), buf_(nullptr)
+    SecureBuf(SecureBuf &&other) noexcept
     {
         *this = std::move(other);
     }
@@ -36,6 +36,7 @@ class SecureBuf
     // Destructor securely zeros the buffer via OPENSSL_secure_clear_free before releasing it.
     ~SecureBuf();
 
+    [[nodiscard]]
     bool has_value() const noexcept
     {
         return nullptr != buf_ && size_ > 0;

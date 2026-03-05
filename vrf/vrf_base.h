@@ -70,18 +70,18 @@ template <typename T> class VRFObject
         return type_;
     }
 
-  protected:
-    VRFObject() = default;
-
-    VRFObject(Type type) : type_(type) {};
-
-    VRFObject(const VRFObject<T> &) = default;
-
     VRFObject &operator=(const VRFObject<T> &) = delete;
 
     VRFObject(VRFObject<T> &&) = delete;
 
     VRFObject &operator=(VRFObject<T> &&) = delete;
+
+  protected:
+    VRFObject() = default; // NOLINT(bugprone-crtp-constructor-accessibility)
+
+    explicit VRFObject(Type type) : type_(type) {}; // NOLINT(bugprone-crtp-constructor-accessibility)
+
+    VRFObject(const VRFObject<T> &) = default; // NOLINT(bugprone-crtp-constructor-accessibility)
 
     /**
      * Sets the VRF type for this object.
@@ -99,6 +99,7 @@ template <typename T> class VRFObject
  * Abstract base class representing a clonable VRF object. Derived classes must implement the clone() method
  * to return a unique pointer to a new instance of the derived type.
  */
+// NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility)
 template <typename T> class Clonable
 {
   public:
@@ -124,7 +125,7 @@ class Serializable
      * Serializes the object into a vector of bytes.
      */
     [[nodiscard]]
-    virtual std::vector<std::byte> to_bytes() = 0;
+    virtual std::vector<std::byte> to_bytes() const = 0;
 
     /**
      * Serializes the object into a SecureBuf. The default implementation calls to_bytes() and copies
@@ -132,7 +133,7 @@ class Serializable
      * to avoid the intermediate non-secure allocation.
      */
     [[nodiscard]]
-    virtual SecureBuf to_secure_bytes()
+    virtual SecureBuf to_secure_bytes() const
     {
         std::vector<std::byte> bytes = to_bytes();
 
@@ -182,7 +183,7 @@ class Serializable
 class Proof : public VRFObject<Proof>, public Clonable<Proof>, public Serializable
 {
   public:
-    virtual ~Proof() = default;
+    ~Proof() override = default;
 
     /**
      * Returns the VRF value associated with this proof as a vector of bytes. The length of the
@@ -205,7 +206,7 @@ class PublicKey;
 class SecretKey : public VRFObject<SecretKey>, public Clonable<SecretKey>, public Serializable
 {
   public:
-    virtual ~SecretKey() = default;
+    ~SecretKey() override = default;
 
     /**
      * Generates a VRF proof for the given input data using this secret key.
@@ -238,7 +239,7 @@ class SecretKey : public VRFObject<SecretKey>, public Clonable<SecretKey>, publi
      * Returns the public key corresponding to this secret key.
      */
     [[nodiscard]]
-    virtual std::unique_ptr<PublicKey> get_public_key() = 0;
+    virtual std::unique_ptr<PublicKey> get_public_key() const = 0;
 
   protected:
     using VRFObject<SecretKey>::VRFObject;
@@ -251,7 +252,7 @@ class SecretKey : public VRFObject<SecretKey>, public Clonable<SecretKey>, publi
 class PublicKey : public VRFObject<PublicKey>, public Clonable<PublicKey>, public Serializable
 {
   public:
-    virtual ~PublicKey() = default;
+    ~PublicKey() override = default;
 
     /**
      * Verifies the given VRF proof against the provided input data using this public key.

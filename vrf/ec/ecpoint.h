@@ -15,7 +15,7 @@ class ScalarType
 
     ScalarType(BIGNUM_Guard &&bn);
 
-    ScalarType(bool secure);
+    explicit ScalarType(bool secure);
 
     ~ScalarType()
     {
@@ -92,7 +92,7 @@ class ScalarType
         scalar_.free();
     }
 
-    BIGNUM_Guard scalar_{};
+    BIGNUM_Guard scalar_;
 };
 
 class ECPoint
@@ -106,7 +106,7 @@ class ECPoint
 
     ECPoint() = default;
 
-    ECPoint(const EC_GROUP_Guard &group, SpecialPoint set_to = SpecialPoint::INFTY);
+    explicit ECPoint(const EC_GROUP_Guard &group, SpecialPoint set_to = SpecialPoint::INFTY);
 
     ECPoint(EC_POINT_Guard &&source);
 
@@ -161,6 +161,7 @@ class ECPoint
 
     bool set_to_generator_multiple(const EC_GROUP_Guard &group, const ScalarType &scalar, BN_CTX_Guard &bcg);
 
+    [[nodiscard]]
     bool in_prime_order_subgroup() const;
 
     bool add(const EC_GROUP_Guard &group, const ECPoint &other, BN_CTX_Guard &bcg);
@@ -173,7 +174,7 @@ class ECPoint
         pt_.free();
     }
 
-    EC_POINT_Guard pt_{};
+    EC_POINT_Guard pt_;
 };
 
 } // namespace vrf::ec

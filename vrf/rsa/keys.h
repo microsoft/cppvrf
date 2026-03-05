@@ -19,7 +19,7 @@ class RSA_SK_Guard
   public:
     RSA_SK_Guard() = default;
 
-    RSA_SK_Guard(Type type);
+    explicit RSA_SK_Guard(Type type);
 
     RSA_SK_Guard(Type type, EVP_PKEY_Guard pkey) : type_{type}, pkey_{std::move(pkey)} {};
 
@@ -90,9 +90,9 @@ class RSA_PK_Guard
   public:
     RSA_PK_Guard() = default;
 
-    RSA_PK_Guard(const RSA_SK_Guard &sk_guard);
+    explicit RSA_PK_Guard(const RSA_SK_Guard &sk_guard);
 
-    RSA_PK_Guard(std::span<const std::byte> der_spki_with_type);
+    explicit RSA_PK_Guard(std::span<const std::byte> der_spki_with_type);
 
     ~RSA_PK_Guard()
     {

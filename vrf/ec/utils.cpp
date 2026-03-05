@@ -162,11 +162,11 @@ EC_POINT_Guard ecvrf_try_and_increment_method(Type type, const EC_GROUP_Guard &g
     const auto domain_separator_back_start = ctr_start + 1 /* ctr */;
 
     // Copy in everything except the counter value.
-    std::transform(params.suite_string.begin(), params.suite_string.end(), suite_string_start,
-                   [](char c) { return static_cast<std::byte>(c); });
+    std::ranges::transform(params.suite_string, suite_string_start,
+                           [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_front_start = domain_separator_front;
-    std::copy(e2c_salt.begin(), e2c_salt.end(), e2c_salt_start);
-    std::copy(data.begin(), data.end(), data_start);
+    std::ranges::copy(e2c_salt, e2c_salt_start);
+    std::ranges::copy(data, data_start);
     *domain_separator_back_start = domain_separator_back;
 
     BIGNUM_Guard cofactor{};
@@ -203,7 +203,8 @@ EC_POINT_Guard ecvrf_try_and_increment_method(Type type, const EC_GROUP_Guard &g
         }
 
         hash.insert(hash.begin(), std::byte{0x02}); // Compressed point indicator
-        if ((pt = bytes_to_point(group, hash, bcg)).has_value() && 0 == EC_POINT_is_at_infinity(group.get(), pt.get()))
+        pt = bytes_to_point(group, hash, bcg);
+        if (pt.has_value() && 0 == EC_POINT_is_at_infinity(group.get(), pt.get()))
         {
             // If cofactor is not 1, we need to clear it.
             if (1 != params.cofactor)
@@ -250,6 +251,7 @@ std::vector<std::byte> rfc6979_bits2octets(const BIGNUM *modulus, std::span<cons
         GetLogger()->debug("Invalid modulus in rfc6979_bits2octets.");
         return {};
     }
+    // NOLINTNEXTLINE(readability-redundant-casting)
     const int mod_len = static_cast<int>((static_cast<std::size_t>(mod_bitlen) + 7) / 8);
 
     // This is by how many bits we need to right-shift if data is longer than mod_bitlen.
@@ -271,7 +273,7 @@ std::vector<std::byte> rfc6979_bits2octets(const BIGNUM *modulus, std::span<cons
         return {};
     }
 
-    if (!BN_bin2bn(reinterpret_cast<const unsigned char *>(data.data()), data_len, data_bn))
+    if (nullptr == BN_bin2bn(reinterpret_cast<const unsigned char *>(data.data()), data_len, data_bn))
     {
         GetLogger()->err("Failed to convert bits to BIGNUM in rfc6979_bits2octets.");
         BN_CTX_end(bcg.get());
@@ -332,7 +334,7 @@ BIGNUM_Guard rfc6979_nonce_gen(Type type, const EC_GROUP_Guard &group, const BIG
         return {};
     }
 
-    int order_bitlen = BN_num_bits(order);
+    const int order_bitlen = BN_num_bits(order);
     if (0 >= order_bitlen)
     {
         GetLogger()->err("Invalid group order in rfc6979_nonce_gen.");
@@ -393,12 +395,14 @@ BIGNUM_Guard rfc6979_nonce_gen(Type type, const EC_GROUP_Guard &group, const BIG
         return {};
     }
 
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     OSSL_PARAM kdf_params[] = {
         OSSL_PARAM_utf8_string(OSSL_DRBG_PARAM_DIGEST, const_cast<char *>(params.digest.data()), 0),
         OSSL_PARAM_octet_string(OSSL_KDF_PARAM_HMACDRBG_ENTROPY, sk_buf.get(), sk_bytes),
         OSSL_PARAM_octet_string(OSSL_KDF_PARAM_HMACDRBG_NONCE, mhash_octets.data(), mhash_octets.size()),
         OSSL_PARAM_END};
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
     if (1 != EVP_KDF_CTX_set_params(kdf_ctx, kdf_params))
     {
         EVP_KDF_CTX_free(kdf_ctx);

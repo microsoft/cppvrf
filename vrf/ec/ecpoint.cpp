@@ -58,7 +58,7 @@ bool reduce_mod_group_order(BIGNUM_Guard &bn, const EC_GROUP_Guard &group, BN_CT
     {
         return false;
     }
-    else if (*try_quick)
+    if (*try_quick)
     {
         return true;
     }
@@ -100,17 +100,15 @@ bool reduce_mod_group_order(BIGNUM_Guard &bn, const EC_GROUP_Guard &group, BN_CT
 
 } // namespace
 
-ScalarType::ScalarType(BIGNUM_Guard &&bn) : scalar_{}
+ScalarType::ScalarType(BIGNUM_Guard &&bn) : scalar_(std::move(bn))
 {
-    if (!bn.has_value())
+    if (!scalar_.has_value())
     {
         GetLogger()->debug("ScalarType constructor called with uninitialized BIGNUM_Guard.");
-        return;
     }
-    scalar_ = std::move(bn);
 }
 
-ScalarType::ScalarType(bool secure) : scalar_{}
+ScalarType::ScalarType(bool secure)
 {
     scalar_ = BIGNUM_Guard{secure};
     if (!scalar_.has_value())
@@ -136,11 +134,8 @@ ScalarType &ScalarType::operator=(const ScalarType &assign)
             GetLogger()->err("Failed to copy BIGNUM in ScalarType copy assignment.");
             return *this;
         }
-        else
-        {
-            using std::swap;
-            swap(scalar_, bn_copy);
-        }
+        using std::swap;
+        swap(scalar_, bn_copy);
     }
 
     return *this;
@@ -452,14 +447,12 @@ ECPoint::ECPoint(const EC_GROUP_Guard &group, SpecialPoint set_to)
     pt_ = std::move(pt);
 }
 
-ECPoint::ECPoint(EC_POINT_Guard &&source) : pt_{}
+ECPoint::ECPoint(EC_POINT_Guard &&source) : pt_(std::move(source))
 {
-    if (!source.has_value())
+    if (!pt_.has_value())
     {
         GetLogger()->debug("ECPoint constructor called with uninitialized EC_POINT_Guard.");
-        return;
     }
-    pt_ = std::move(source);
 }
 
 ECPoint &ECPoint::operator=(const ECPoint &assign)
@@ -491,11 +484,8 @@ ECPoint &ECPoint::operator=(const ECPoint &assign)
             GetLogger()->err("Failed to copy EC_POINT in ECPoint copy assignment.");
             return *this;
         }
-        else
-        {
-            using std::swap;
-            swap(pt_, pt_copy);
-        }
+        using std::swap;
+        swap(pt_, pt_copy);
     }
 
     return *this;

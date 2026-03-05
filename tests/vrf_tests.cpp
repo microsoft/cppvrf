@@ -279,7 +279,7 @@ TEST_P(VRFTest, InvalidProof)
 
     // Totally wrong size proof.
     {
-        std::vector<std::byte> invalid_proof_data(proof_bytes.begin(), proof_bytes.begin() + proof_bytes.size() / 2);
+        std::vector<std::byte> invalid_proof_data(proof_bytes.begin(), proof_bytes.begin() + static_cast<std::ptrdiff_t>(proof_bytes.size() / 2));
         auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());

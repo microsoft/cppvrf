@@ -109,12 +109,12 @@ std::size_t int_to_bytes_little_endian_impl(const BIGNUM_Guard &bn, std::span<st
 
 } // namespace
 
-bytes_to_int_ptr_t bytes_to_int_big_endian = &bytes_to_int_big_endian_impl;
+const bytes_to_int_ptr_t bytes_to_int_big_endian = &bytes_to_int_big_endian_impl;
 
-bytes_to_int_ptr_t bytes_to_int_little_endian = &bytes_to_int_little_endian_impl;
+const bytes_to_int_ptr_t bytes_to_int_little_endian = &bytes_to_int_little_endian_impl;
 
-int_to_bytes_ptr_t int_to_bytes_big_endian = &int_to_bytes_big_endian_impl;
+const int_to_bytes_ptr_t int_to_bytes_big_endian = &int_to_bytes_big_endian_impl;
 
-int_to_bytes_ptr_t int_to_bytes_little_endian = &int_to_bytes_little_endian_impl;
+const int_to_bytes_ptr_t int_to_bytes_little_endian = &int_to_bytes_little_endian_impl;
 
 } // namespace vrf

@@ -39,6 +39,7 @@ std::vector<std::byte> compute_hash(const char *md_name, std::span<const std::by
 
     GetLogger()->trace("Computed hash with digest {} for data size {}, output size {}.", md_name, tbh.size(),
                        md_outlen);
+    // NOLINTNEXTLINE(modernize-return-braced-init-list)
     return std::vector<std::byte>(md_out.begin(), md_out.begin() + md_outlen);
 }
 

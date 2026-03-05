@@ -12,7 +12,7 @@ namespace vrf::tests
 
 TEST(CommonTests, GetLibCtx)
 {
-    OSSL_LIB_CTX *libctx = vrf::get_libctx();
+    const OSSL_LIB_CTX *libctx = vrf::get_libctx();
 
     // The default implementation returns nullptr.
     EXPECT_EQ(libctx, nullptr);
@@ -84,7 +84,8 @@ TEST(CommonTests, SafeAdd)
 {
     {
         auto result = vrf::safe_add(std::uint32_t{1}, std::uint32_t{2}, std::uint32_t{3});
-        EXPECT_TRUE(result.has_value());
+        ASSERT_TRUE(result.has_value());
+        // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
         EXPECT_EQ(result.value(), 6);
     }
     {
@@ -93,18 +94,21 @@ TEST(CommonTests, SafeAdd)
     }
     {
         auto result = vrf::safe_add(std::uint32_t{1}, std::uint16_t{2}, std::uint8_t{3});
-        EXPECT_TRUE(result.has_value());
+        ASSERT_TRUE(result.has_value());
+        // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
         EXPECT_EQ(result.value(), 6);
     }
     {
         auto result = vrf::safe_add(std::uint32_t{1}, std::uint16_t{2}, std::numeric_limits<std::uint64_t>::max() - 3);
-        EXPECT_TRUE(result.has_value());
+        ASSERT_TRUE(result.has_value());
+        // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
         EXPECT_EQ(result.value(), std::numeric_limits<std::uint64_t>::max());
     }
     {
         auto result = vrf::safe_add(std::numeric_limits<std::uint8_t>::max(), std::numeric_limits<std::uint8_t>::max(),
                                     std::uint16_t{1});
-        EXPECT_TRUE(result.has_value());
+        ASSERT_TRUE(result.has_value());
+        // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
         EXPECT_EQ(result.value(), std::uint16_t{255 + 255 + 1});
     }
 }

@@ -78,7 +78,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
         return {};
     }
 
-    rsa::RSAVRFParams params = rsa::get_rsavrf_params(type);
+    const rsa::RSAVRFParams params = rsa::get_rsavrf_params(type);
     if (params.algorithm_name.empty())
     {
         GetLogger()->err("Unsupported VRF type for RSA key generation.");
@@ -201,7 +201,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
         return {};
     }
 
-    bool ok = OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_N, n.get()) &&
+    const bool ok = OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_N, n.get()) &&
               OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_E, e_bn.get()) &&
               OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_D, d.get()) &&
               OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_FACTOR1, p.get()) &&
@@ -218,7 +218,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
     }
 
     OSSL_PARAM *paramlist = OSSL_PARAM_BLD_to_param(bld);
-    if (!paramlist)
+    if (nullptr == paramlist)
     {
         OSSL_PARAM_BLD_free(bld);
         GetLogger()->err("OSSL_PARAM_BLD_to_param failed.");
@@ -336,7 +336,7 @@ std::vector<std::byte> parse_hex_bytes(std::string_view s)
         }
         else
         {
-            unsigned next_byte = (static_cast<unsigned>(hi) << 4) | static_cast<unsigned>(v);
+            unsigned next_byte = (static_cast<unsigned>(hi) << 4U) | static_cast<unsigned>(v);
             out.push_back(static_cast<std::byte>(next_byte));
             hi = -1;
         }
