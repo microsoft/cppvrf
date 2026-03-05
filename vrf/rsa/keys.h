@@ -74,13 +74,13 @@ class RSA_SK_Guard
     void free()
     {
         pkey_.free();
-        type_ = Type::UNKNOWN;
+        type_ = Type::unknown;
     }
 
   private:
     static EVP_PKEY_Guard GenerateRSAKey(Type type);
 
-    Type type_ = Type::UNKNOWN;
+    Type type_ = Type::unknown;
 
     EVP_PKEY_Guard pkey_;
 };
@@ -143,13 +143,13 @@ class RSA_PK_Guard
     void free()
     {
         pkey_.free();
-        type_ = Type::UNKNOWN;
+        type_ = Type::unknown;
     }
 
   private:
     RSA_PK_Guard(Type type, EVP_PKEY_Guard pkey) : type_{type}, pkey_{std::move(pkey)} {};
 
-    Type type_ = Type::UNKNOWN;
+    Type type_ = Type::unknown;
 
     EVP_PKEY_Guard pkey_;
 };

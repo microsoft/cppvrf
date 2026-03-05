@@ -722,7 +722,7 @@ std::unique_ptr<Proof> RSASecretKey::get_vrf_proof(std::span<const std::byte> in
     return ret;
 }
 
-RSASecretKey::RSASecretKey(Type type) : SecretKey{Type::UNKNOWN}
+RSASecretKey::RSASecretKey(Type type) : SecretKey{Type::unknown}
 {
     RSA_SK_Guard sk_guard{type};
     if (!sk_guard.has_value())
@@ -754,7 +754,7 @@ RSASecretKey::RSASecretKey(Type type) : SecretKey{Type::UNKNOWN}
                        to_string(type));
 }
 
-RSASecretKey::RSASecretKey(RSA_SK_Guard sk_guard) : SecretKey{Type::UNKNOWN}
+RSASecretKey::RSASecretKey(RSA_SK_Guard sk_guard) : SecretKey{Type::unknown}
 {
     if (!sk_guard.has_value())
     {
@@ -904,7 +904,7 @@ void RSASecretKey::from_bytes(std::span<const std::byte> data)
     *this = std::move(secret_key);
 }
 
-RSAPublicKey::RSAPublicKey(const RSAPublicKey &source) : PublicKey{Type::UNKNOWN}
+RSAPublicKey::RSAPublicKey(const RSAPublicKey &source) : PublicKey{Type::unknown}
 {
     RSA_PK_Guard pk_guard_copy = source.pk_guard_.clone();
     if (pk_guard_copy.has_value() != source.pk_guard_.has_value())
@@ -938,7 +938,7 @@ RSAPublicKey &RSAPublicKey::operator=(RSAPublicKey &&rhs) noexcept
 }
 
 RSAPublicKey::RSAPublicKey(std::span<const std::byte> der_spki_with_type)
-    : PublicKey{Type::UNKNOWN}
+    : PublicKey{Type::unknown}
 {
     RSA_PK_Guard pk_guard{der_spki_with_type};
     if (!pk_guard.has_value())
@@ -962,7 +962,7 @@ RSAPublicKey::RSAPublicKey(std::span<const std::byte> der_spki_with_type)
                        to_string(get_type()));
 }
 
-RSAPublicKey::RSAPublicKey(Type type, RSA_PK_Guard pk_guard) : PublicKey{Type::UNKNOWN}
+RSAPublicKey::RSAPublicKey(Type type, RSA_PK_Guard pk_guard) : PublicKey{Type::unknown}
 {
     if (!pk_guard.has_value())
     {

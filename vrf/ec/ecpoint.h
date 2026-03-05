@@ -100,13 +100,13 @@ class ECPoint
   public:
     enum class SpecialPoint
     {
-        INFTY = 0,
-        GENERATOR = 1,
+        infinity = 0,
+        generator = 1,
     };
 
     ECPoint() = default;
 
-    explicit ECPoint(const EC_GROUP_Guard &group, SpecialPoint set_to = SpecialPoint::INFTY);
+    explicit ECPoint(const EC_GROUP_Guard &group, SpecialPoint set_to = SpecialPoint::infinity);
 
     ECPoint(EC_POINT_Guard &&source);
 

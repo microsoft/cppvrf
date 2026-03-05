@@ -14,70 +14,70 @@ namespace vrf
 
 enum class Type : std::size_t
 {
-    RSA_FDH_VRF_RSA2048_SHA256,
-    RSA_FDH_VRF_RSA3072_SHA256,
-    RSA_FDH_VRF_RSA4096_SHA384,
-    RSA_FDH_VRF_RSA4096_SHA512,
-    RSA_PSS_NOSALT_VRF_RSA2048_SHA256,
-    RSA_PSS_NOSALT_VRF_RSA3072_SHA256,
-    RSA_PSS_NOSALT_VRF_RSA4096_SHA384,
-    RSA_PSS_NOSALT_VRF_RSA4096_SHA512,
-    EC_VRF_P256_SHA256_TAI,
-    UNKNOWN
+    rsa_fdh_vrf_rsa2048_sha256,
+    rsa_fdh_vrf_rsa3072_sha256,
+    rsa_fdh_vrf_rsa4096_sha384,
+    rsa_fdh_vrf_rsa4096_sha512,
+    rsa_pss_nosalt_vrf_rsa2048_sha256,
+    rsa_pss_nosalt_vrf_rsa3072_sha256,
+    rsa_pss_nosalt_vrf_rsa4096_sha384,
+    rsa_pss_nosalt_vrf_rsa4096_sha512,
+    ec_vrf_p256_sha256_tai,
+    unknown
 };
 
 constexpr bool is_rsa_type(Type type)
 {
-    return type == Type::RSA_FDH_VRF_RSA2048_SHA256 || type == Type::RSA_FDH_VRF_RSA3072_SHA256 ||
-           type == Type::RSA_FDH_VRF_RSA4096_SHA384 || type == Type::RSA_FDH_VRF_RSA4096_SHA512 ||
-           type == Type::RSA_PSS_NOSALT_VRF_RSA2048_SHA256 || type == Type::RSA_PSS_NOSALT_VRF_RSA3072_SHA256 ||
-           type == Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA384 || type == Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA512;
+    return type == Type::rsa_fdh_vrf_rsa2048_sha256 || type == Type::rsa_fdh_vrf_rsa3072_sha256 ||
+           type == Type::rsa_fdh_vrf_rsa4096_sha384 || type == Type::rsa_fdh_vrf_rsa4096_sha512 ||
+           type == Type::rsa_pss_nosalt_vrf_rsa2048_sha256 || type == Type::rsa_pss_nosalt_vrf_rsa3072_sha256 ||
+           type == Type::rsa_pss_nosalt_vrf_rsa4096_sha384 || type == Type::rsa_pss_nosalt_vrf_rsa4096_sha512;
 }
 
 constexpr bool is_ec_type(Type type)
 {
-    return type == Type::EC_VRF_P256_SHA256_TAI;
+    return type == Type::ec_vrf_p256_sha256_tai;
 }
 
 constexpr std::string_view to_string(Type type)
 {
     switch (type)
     {
-    case Type::RSA_FDH_VRF_RSA2048_SHA256:
-        return "RSA_FDH_VRF_RSA2048_SHA256";
-    case Type::RSA_FDH_VRF_RSA3072_SHA256:
-        return "RSA_FDH_VRF_RSA3072_SHA256";
-    case Type::RSA_FDH_VRF_RSA4096_SHA384:
-        return "RSA_FDH_VRF_RSA4096_SHA384";
-    case Type::RSA_FDH_VRF_RSA4096_SHA512:
-        return "RSA_FDH_VRF_RSA4096_SHA512";
-    case Type::RSA_PSS_NOSALT_VRF_RSA2048_SHA256:
-        return "RSA_PSS_NOSALT_VRF_RSA2048_SHA256";
-    case Type::RSA_PSS_NOSALT_VRF_RSA3072_SHA256:
-        return "RSA_PSS_NOSALT_VRF_RSA3072_SHA256";
-    case Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA384:
-        return "RSA_PSS_NOSALT_VRF_RSA4096_SHA384";
-    case Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA512:
-        return "RSA_PSS_NOSALT_VRF_RSA4096_SHA512";
-    case Type::EC_VRF_P256_SHA256_TAI:
-        return "EC_VRF_P256_SHA256_TAI";
+    case Type::rsa_fdh_vrf_rsa2048_sha256:
+        return "rsa_fdh_vrf_rsa2048_sha256";
+    case Type::rsa_fdh_vrf_rsa3072_sha256:
+        return "rsa_fdh_vrf_rsa3072_sha256";
+    case Type::rsa_fdh_vrf_rsa4096_sha384:
+        return "rsa_fdh_vrf_rsa4096_sha384";
+    case Type::rsa_fdh_vrf_rsa4096_sha512:
+        return "rsa_fdh_vrf_rsa4096_sha512";
+    case Type::rsa_pss_nosalt_vrf_rsa2048_sha256:
+        return "rsa_pss_nosalt_vrf_rsa2048_sha256";
+    case Type::rsa_pss_nosalt_vrf_rsa3072_sha256:
+        return "rsa_pss_nosalt_vrf_rsa3072_sha256";
+    case Type::rsa_pss_nosalt_vrf_rsa4096_sha384:
+        return "rsa_pss_nosalt_vrf_rsa4096_sha384";
+    case Type::rsa_pss_nosalt_vrf_rsa4096_sha512:
+        return "rsa_pss_nosalt_vrf_rsa4096_sha512";
+    case Type::ec_vrf_p256_sha256_tai:
+        return "ec_vrf_p256_sha256_tai";
     default:
-        return "UNKNOWN";
+        return "unknown";
     }
 }
 
 constexpr std::byte as_byte(Type type)
 {
-    static_assert(std::in_range<std::uint8_t>(static_cast<std::size_t>(Type::UNKNOWN)));
+    static_assert(std::in_range<std::uint8_t>(static_cast<std::size_t>(Type::unknown)));
     return static_cast<std::byte>(type);
 }
 
 constexpr Type from_byte(std::byte b)
 {
     const std::size_t value = static_cast<std::size_t>(b);
-    if (static_cast<std::size_t>(Type::UNKNOWN) < value)
+    if (static_cast<std::size_t>(Type::unknown) < value)
     {
-        return Type::UNKNOWN;
+        return Type::unknown;
     }
     return static_cast<Type>(value);
 }

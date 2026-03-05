@@ -434,7 +434,7 @@ ECPoint::ECPoint(const EC_GROUP_Guard &group, SpecialPoint set_to)
         return;
     }
 
-    if (SpecialPoint::GENERATOR == set_to)
+    if (SpecialPoint::generator == set_to)
     {
         const EC_POINT *gen = EC_GROUP_get0_generator(group.get());
         if (1 != EC_POINT_copy(pt.get(), gen))

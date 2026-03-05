@@ -44,7 +44,7 @@ void EC_GROUP_Guard::free() noexcept
     const void *ec_group_addr = static_cast<const void *>(ec_group_);
     EC_GROUP_free(ec_group_);
     ec_group_ = nullptr;
-    curve_ = Curve::UNDEFINED;
+    curve_ = Curve::undefined;
 
     try
     {
@@ -271,7 +271,7 @@ void EC_POINT_Guard::free() noexcept
     const Curve curve = curve_;
     EC_POINT_clear_free(ec_pt_);
     ec_pt_ = nullptr;
-    curve_ = Curve::UNDEFINED;
+    curve_ = Curve::undefined;
 
     try
     {

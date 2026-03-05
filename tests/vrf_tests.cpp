@@ -342,7 +342,7 @@ TEST_P(VRFTest, InvalidPublicKey)
 
 TEST(VRFTest, InputFlexibility)
 {
-    vrf::Type type = vrf::Type::RSA_FDH_VRF_RSA2048_SHA256;
+    vrf::Type type = vrf::Type::rsa_fdh_vrf_rsa2048_sha256;
     auto sk = vrf::VRF::Create(type);
     auto pk = sk->get_public_key();
 
@@ -464,15 +464,15 @@ TEST_P(VRFTest, SKSerializationVerifyCross)
 }
 
 INSTANTIATE_TEST_SUITE_P(RSAVRFTypes, VRFTest,
-                         testing::Values(vrf::Type::RSA_FDH_VRF_RSA2048_SHA256, vrf::Type::RSA_FDH_VRF_RSA3072_SHA256,
-                                         vrf::Type::RSA_FDH_VRF_RSA4096_SHA384, vrf::Type::RSA_FDH_VRF_RSA4096_SHA512,
-                                         vrf::Type::RSA_PSS_NOSALT_VRF_RSA2048_SHA256,
-                                         vrf::Type::RSA_PSS_NOSALT_VRF_RSA3072_SHA256,
-                                         vrf::Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA384,
-                                         vrf::Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA512),
+                         testing::Values(vrf::Type::rsa_fdh_vrf_rsa2048_sha256, vrf::Type::rsa_fdh_vrf_rsa3072_sha256,
+                                         vrf::Type::rsa_fdh_vrf_rsa4096_sha384, vrf::Type::rsa_fdh_vrf_rsa4096_sha512,
+                                         vrf::Type::rsa_pss_nosalt_vrf_rsa2048_sha256,
+                                         vrf::Type::rsa_pss_nosalt_vrf_rsa3072_sha256,
+                                         vrf::Type::rsa_pss_nosalt_vrf_rsa4096_sha384,
+                                         vrf::Type::rsa_pss_nosalt_vrf_rsa4096_sha512),
                          testing::PrintToStringParamName());
 
-INSTANTIATE_TEST_SUITE_P(ECVRFTypes, VRFTest, testing::Values(vrf::Type::EC_VRF_P256_SHA256_TAI),
+INSTANTIATE_TEST_SUITE_P(ECVRFTypes, VRFTest, testing::Values(vrf::Type::ec_vrf_p256_sha256_tai),
                          testing::PrintToStringParamName());
 
 class RSATestVectors : public testing::TestWithParam<vrf::Type>
@@ -521,11 +521,11 @@ TEST_P(ECTestVectors, TestVectors)
 }
 
 INSTANTIATE_TEST_SUITE_P(TestVectorTypes, RSATestVectors,
-                         testing::Values(vrf::Type::RSA_FDH_VRF_RSA2048_SHA256, vrf::Type::RSA_FDH_VRF_RSA3072_SHA256,
-                                         vrf::Type::RSA_FDH_VRF_RSA4096_SHA384, vrf::Type::RSA_FDH_VRF_RSA4096_SHA512),
+                         testing::Values(vrf::Type::rsa_fdh_vrf_rsa2048_sha256, vrf::Type::rsa_fdh_vrf_rsa3072_sha256,
+                                         vrf::Type::rsa_fdh_vrf_rsa4096_sha384, vrf::Type::rsa_fdh_vrf_rsa4096_sha512),
                          testing::PrintToStringParamName());
 
-INSTANTIATE_TEST_SUITE_P(TestVectorTypes, ECTestVectors, testing::Values(vrf::Type::EC_VRF_P256_SHA256_TAI),
+INSTANTIATE_TEST_SUITE_P(TestVectorTypes, ECTestVectors, testing::Values(vrf::Type::ec_vrf_p256_sha256_tai),
                          testing::PrintToStringParamName());
 
 } // namespace vrf::tests

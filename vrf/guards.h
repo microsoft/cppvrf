@@ -243,7 +243,7 @@ class EC_GROUP_Guard
     [[nodiscard]]
     bool has_value() const noexcept
     {
-        return nullptr != ec_group_ && Curve::UNDEFINED != curve_;
+        return nullptr != ec_group_ && Curve::undefined != curve_;
     }
 
     void free() noexcept;
@@ -251,7 +251,7 @@ class EC_GROUP_Guard
   private:
     EC_GROUP *ec_group_ = nullptr;
 
-    Curve curve_ = Curve::UNDEFINED;
+    Curve curve_ = Curve::undefined;
 };
 
 class BIGNUM_Guard
@@ -420,7 +420,7 @@ class EC_POINT_Guard
     [[nodiscard]]
     bool has_value() const noexcept
     {
-        return nullptr != ec_pt_ && Curve::UNDEFINED != curve_;
+        return nullptr != ec_pt_ && Curve::undefined != curve_;
     }
 
     void free() noexcept;
@@ -428,7 +428,7 @@ class EC_POINT_Guard
   private:
     EC_POINT *ec_pt_ = nullptr;
 
-    Curve curve_ = Curve::UNDEFINED;
+    Curve curve_ = Curve::undefined;
 };
 
 bool ensure_bcg_set(BN_CTX_Guard &bcg, bool secure);

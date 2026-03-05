@@ -92,7 +92,7 @@ template <typename T> class VRFObject
     }
 
   private:
-    Type type_ = Type::UNKNOWN;
+    Type type_ = Type::unknown;
 };
 
 /**

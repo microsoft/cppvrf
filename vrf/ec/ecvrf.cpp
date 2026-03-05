@@ -63,7 +63,7 @@ ScalarType make_challenge(Type type, const EC_GROUP_Guard &group, Points &&...po
     std::transform(params.suite_string.begin(), params.suite_string.end(), suite_string_start,
                    [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_front_start = domain_separator_front;
-    auto [success, written] = append_ecpoint_to_bytes(group, PointToBytesMethod::SEC1_COMPRESSED, bcg, points_start,
+    auto [success, written] = append_ecpoint_to_bytes(group, PointToBytesMethod::sec1_compressed, bcg, points_start,
                                                       std::forward<Points>(points)...);
     if (!success || challenge_buf.size() != written + suite_string_len + 2 /* domain separators */)
     {
@@ -383,7 +383,7 @@ ECProof &ECProof::operator=(ECProof &&rhs) noexcept
     return *this;
 }
 
-ECSecretKey::ECSecretKey(Type type) : SecretKey{Type::UNKNOWN}
+ECSecretKey::ECSecretKey(Type type) : SecretKey{Type::unknown}
 {
     ScalarType sk{true};
     if (!sk.has_value())
@@ -442,7 +442,7 @@ ECSecretKey::ECSecretKey(Type type) : SecretKey{Type::UNKNOWN}
     GetLogger()->trace("ECSecretKey constructor generated key pair for VRF type {}.", to_string(type));
 }
 
-ECSecretKey::ECSecretKey(Type type, ScalarType sk) : SecretKey{Type::UNKNOWN}
+ECSecretKey::ECSecretKey(Type type, ScalarType sk) : SecretKey{Type::unknown}
 {
     if (!sk.has_value())
     {
@@ -823,7 +823,7 @@ void ECSecretKey::from_bytes(std::span<const std::byte> data)
     *this = std::move(secret_key);
 }
 
-ECPublicKey::ECPublicKey(const ECPublicKey &source) : PublicKey{Type::UNKNOWN}
+ECPublicKey::ECPublicKey(const ECPublicKey &source) : PublicKey{Type::unknown}
 {
     ECPoint pk_copy{source.pk_};
     EC_GROUP_Guard group_copy{source.group_};
@@ -857,7 +857,7 @@ ECPublicKey &ECPublicKey::operator=(ECPublicKey &&rhs) noexcept
 }
 
 // NOLINTNEXTLINE(performance-unnecessary-value-param)
-ECPublicKey::ECPublicKey(Type type, EC_GROUP_Guard group, ECPoint pk) : PublicKey{Type::UNKNOWN}
+ECPublicKey::ECPublicKey(Type type, EC_GROUP_Guard group, ECPoint pk) : PublicKey{Type::unknown}
 {
     const ECVRFParams params = get_ecvrf_params(type);
     if (params.algorithm_name.empty())
@@ -883,7 +883,7 @@ ECPublicKey::ECPublicKey(Type type, EC_GROUP_Guard group, ECPoint pk) : PublicKe
                        to_string(type));
 }
 
-ECPublicKey::ECPublicKey(Type type, std::span<const std::byte> der_spki) : PublicKey{Type::UNKNOWN}
+ECPublicKey::ECPublicKey(Type type, std::span<const std::byte> der_spki) : PublicKey{Type::unknown}
 {
     if (!is_ec_type(type))
     {
@@ -1111,7 +1111,7 @@ std::vector<std::byte> ECPublicKey::to_bytes() const
     }
 
     // Get the public key bytes.
-    point_to_bytes_ptr_t point_to_bytes = get_point_to_bytes_method(PointToBytesMethod::SEC1_COMPRESSED);
+    point_to_bytes_ptr_t point_to_bytes = get_point_to_bytes_method(PointToBytesMethod::sec1_compressed);
     if (nullptr == point_to_bytes)
     {
         GetLogger()->err("ECPublicKey::to_bytes failed to get point_to_bytes method.");

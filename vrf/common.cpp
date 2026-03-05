@@ -203,16 +203,16 @@ std::pair<vrf::Type, std::span<const std::byte>> extract_type_from_span(std::spa
     if (data.empty())
     {
         GetLogger()->debug("extract_type_from_span called with empty data.");
-        return {vrf::Type::UNKNOWN, std::span<const std::byte>{}};
+        return {vrf::Type::unknown, std::span<const std::byte>{}};
     }
 
     const std::uint8_t type_byte = std::to_integer<std::uint8_t>(data[0]);
 
     // First check that this is in range, i.e., less than vrf::Type::UNKNOWN.
-    if (static_cast<std::size_t>(type_byte) >= static_cast<std::size_t>(vrf::Type::UNKNOWN))
+    if (static_cast<std::size_t>(type_byte) >= static_cast<std::size_t>(vrf::Type::unknown))
     {
         GetLogger()->debug("extract_type_from_span called with invalid type byte: {}", type_byte);
-        return {vrf::Type::UNKNOWN, std::span<const std::byte>{}};
+        return {vrf::Type::unknown, std::span<const std::byte>{}};
     }
 
     // We can safely static_cast here since we've verified that the type byte is in range.

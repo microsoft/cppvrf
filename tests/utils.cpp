@@ -354,13 +354,13 @@ RSA_VRF_TestVectorParams get_rsa_vrf_test_vector_params(Type type)
 {
     switch (type)
     {
-    case RSA_FDH_VRF_RSA2048_SHA256:
+    case rsa_fdh_vrf_rsa2048_sha256:
         return RSA_FDH_2048_SHA256_PARAMS;
-    case RSA_FDH_VRF_RSA3072_SHA256:
+    case rsa_fdh_vrf_rsa3072_sha256:
         return RSA_FDH_3072_SHA256_PARAMS;
-    case RSA_FDH_VRF_RSA4096_SHA384:
+    case rsa_fdh_vrf_rsa4096_sha384:
         return RSA_FDH_4096_SHA384_PARAMS;
-    case RSA_FDH_VRF_RSA4096_SHA512:
+    case rsa_fdh_vrf_rsa4096_sha512:
         return RSA_FDH_4096_SHA512_PARAMS;
     default:
         GetLogger()->err("No test vector parameters defined for VRF type {}.", to_string(type));
@@ -372,7 +372,7 @@ EC_VRF_TestVectorParams get_ec_vrf_test_vector_params(Type type)
 {
     switch (type)
     {
-    case EC_VRF_P256_SHA256_TAI:
+    case ec_vrf_p256_sha256_tai:
         return EC_VRF_P256_SHA256_TAI_PARAMS;
     default:
         GetLogger()->err("No test vector parameters defined for VRF type {}.", to_string(type));

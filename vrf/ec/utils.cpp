@@ -112,7 +112,7 @@ std::vector<std::byte> e2c_salt_from_public_key(Type type, const EC_GROUP_Guard 
 
     // The salt is just the compressed encoding of the public key.
     std::vector<std::byte> salt(params.pt_len);
-    auto [success, _] = append_ecpoint_to_bytes(group, PointToBytesMethod::SEC1_COMPRESSED, bcg, salt.begin(), pk);
+    auto [success, _] = append_ecpoint_to_bytes(group, PointToBytesMethod::sec1_compressed, bcg, salt.begin(), pk);
 
     return success ? salt : std::vector<std::byte>{};
 }
@@ -128,7 +128,7 @@ EC_POINT_Guard ecvrf_try_and_increment_method(Type type, const EC_GROUP_Guard &g
     }
 
     const ECVRFParams params = get_ecvrf_params(type);
-    if (params.algorithm_name.empty() || E2CMethod::TRY_AND_INCREMENT != params.e2c)
+    if (params.algorithm_name.empty() || E2CMethod::try_and_increment != params.e2c)
     {
         GetLogger()->debug("ecvrf_try_and_increment_method called with non-TAI VRF type.");
         return {};
@@ -315,7 +315,7 @@ BIGNUM_Guard rfc6979_nonce_gen(Type type, const EC_GROUP_Guard &group, const BIG
                                const std::span<const std::byte> m)
 {
     const ECVRFParams params = get_ecvrf_params(type);
-    if (params.algorithm_name.empty() || NonceGenMethod::RFC6979 != params.nonce_gen)
+    if (params.algorithm_name.empty() || NonceGenMethod::rfc6979 != params.nonce_gen)
     {
         GetLogger()->debug("rfc6979_nonce_gen called with non-RFC6979 VRF type.");
         return {};
@@ -467,15 +467,15 @@ point_to_bytes_ptr_t get_point_to_bytes_method(PointToBytesMethod method)
 {
     switch (method)
     {
-    case PointToBytesMethod::SEC1_UNCOMPRESSED:
+    case PointToBytesMethod::sec1_uncompressed:
         return +[](const EC_GROUP_Guard &group, const EC_POINT_Guard &pt, BN_CTX_Guard &bcg,
                    std::span<std::byte> out) -> std::size_t {
-            return sec1_point_to_bytes(group, PointCompression::UNCOMPRESSED, pt, bcg, out);
+            return sec1_point_to_bytes(group, PointCompression::uncompressed, pt, bcg, out);
         };
-    case PointToBytesMethod::SEC1_COMPRESSED:
+    case PointToBytesMethod::sec1_compressed:
         return +[](const EC_GROUP_Guard &group, const EC_POINT_Guard &pt, BN_CTX_Guard &bcg,
                    std::span<std::byte> out) -> std::size_t {
-            return sec1_point_to_bytes(group, PointCompression::COMPRESSED, pt, bcg, out);
+            return sec1_point_to_bytes(group, PointCompression::compressed, pt, bcg, out);
         };
     default:
         GetLogger()->debug("get_point_to_bytes_method called with unsupported method.");
@@ -487,7 +487,7 @@ bytes_to_point_ptr_t get_bytes_to_point_method(BytesToPointMethod method)
 {
     switch (method)
     {
-    case BytesToPointMethod::SEC1:
+    case BytesToPointMethod::sec1:
         return sec1_bytes_to_point;
     default:
         GetLogger()->debug("get_bytes_to_point_method called with unsupported method.");
@@ -538,7 +538,7 @@ e2c_salt_ptr_t get_e2c_salt_method(E2CSaltMethod method)
 {
     switch (method)
     {
-    case E2CSaltMethod::PUBLIC_KEY_COMPRESSED:
+    case E2CSaltMethod::public_key_compressed:
         return e2c_salt_from_public_key;
     default:
         GetLogger()->debug("get_e2c_salt_method called with unsupported method.");
@@ -550,7 +550,7 @@ e2c_ptr_t get_e2c_method(E2CMethod method)
 {
     switch (method)
     {
-    case E2CMethod::TRY_AND_INCREMENT:
+    case E2CMethod::try_and_increment:
         return ecvrf_try_and_increment_method;
     default:
         GetLogger()->debug("get_e2c_method called with unsupported method.");
@@ -562,7 +562,7 @@ nonce_gen_ptr_t get_nonce_gen_method(NonceGenMethod method)
 {
     switch (method)
     {
-    case NonceGenMethod::RFC6979:
+    case NonceGenMethod::rfc6979:
         return rfc6979_nonce_gen;
     default:
         GetLogger()->debug("get_nonce_gen_method called with unsupported method.");

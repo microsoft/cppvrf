@@ -72,9 +72,9 @@ class BIGNUM_Guard;
 
 enum class BytesToIntMethod
 {
-    UNDEFINED = 0,
-    BE = 1,
-    LE = 2,
+    undefined = 0,
+    big_endian = 1,
+    little_endian = 2,
 };
 
 using bytes_to_int_ptr_t = BIGNUM_Guard (*)(std::span<const std::byte> in, bool secure);
@@ -87,9 +87,9 @@ constexpr bytes_to_int_ptr_t get_bytes_to_int_method(BytesToIntMethod method)
 {
     switch (method)
     {
-    case BytesToIntMethod::BE:
+    case BytesToIntMethod::big_endian:
         return bytes_to_int_big_endian;
-    case BytesToIntMethod::LE:
+    case BytesToIntMethod::little_endian:
         return bytes_to_int_little_endian;
     default:
         return nullptr;
@@ -106,9 +106,9 @@ constexpr int_to_bytes_ptr_t get_int_to_bytes_method(BytesToIntMethod method)
 {
     switch (method)
     {
-    case BytesToIntMethod::BE:
+    case BytesToIntMethod::big_endian:
         return int_to_bytes_big_endian;
-    case BytesToIntMethod::LE:
+    case BytesToIntMethod::little_endian:
         return int_to_bytes_little_endian;
     default:
         return nullptr;
@@ -117,8 +117,8 @@ constexpr int_to_bytes_ptr_t get_int_to_bytes_method(BytesToIntMethod method)
 
 enum class Curve : int
 {
-    UNDEFINED = NID_undef,
-    PRIME256V1 = NID_X9_62_prime256v1,
+    undefined = NID_undef,
+    prime256v1 = NID_X9_62_prime256v1,
 };
 
 [[nodiscard]]
@@ -133,9 +133,9 @@ constexpr Curve nid_to_curve(int nid) noexcept
     switch (nid)
     {
     case NID_X9_62_prime256v1:
-        return Curve::PRIME256V1;
+        return Curve::prime256v1;
     default:
-        return Curve::UNDEFINED;
+        return Curve::undefined;
     }
 }
 
@@ -144,9 +144,9 @@ constexpr const char *to_string(Curve curve) noexcept
 {
     switch (curve)
     {
-    case Curve::UNDEFINED:
+    case Curve::undefined:
         return "undefined";
-    case Curve::PRIME256V1:
+    case Curve::prime256v1:
         return "prime256v1";
     default:
         return "unknown";
