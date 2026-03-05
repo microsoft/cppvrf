@@ -17,7 +17,7 @@ namespace vrf
 /**
  * @brief Log level constants for the logger.
  */
-enum class LogLevel : std::size_t
+enum class LogLevel : std::uint8_t
 {
     trace,
     debug,

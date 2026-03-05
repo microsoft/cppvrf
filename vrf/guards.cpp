@@ -48,7 +48,8 @@ void EC_GROUP_Guard::free() noexcept
 
     try
     {
-        GetLogger()->trace("EC_GROUP_Guard freed EC_GROUP (curve {}) at address {:p}.", to_string(curve_), ec_group_addr);
+        GetLogger()->trace("EC_GROUP_Guard freed EC_GROUP (curve {}) at address {:p}.", to_string(curve_),
+                           ec_group_addr);
     }
     catch (...) // NOLINT(bugprone-empty-catch)
     {

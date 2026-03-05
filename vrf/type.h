@@ -12,7 +12,7 @@
 namespace vrf
 {
 
-enum class Type : std::size_t
+enum class Type : std::uint8_t
 {
     rsa_fdh_vrf_rsa2048_sha256,
     rsa_fdh_vrf_rsa3072_sha256,
@@ -66,16 +66,19 @@ constexpr std::string_view to_string(Type type)
     }
 }
 
-constexpr std::byte as_byte(Type type)
+constexpr std::byte to_byte(Type type)
 {
-    static_assert(std::in_range<std::uint8_t>(static_cast<std::size_t>(Type::unknown)));
+    if (static_cast<std::uint8_t>(type) > static_cast<std::uint8_t>(Type::unknown))
+    {
+        return static_cast<std::byte>(Type::unknown);
+    }
     return static_cast<std::byte>(type);
 }
 
 constexpr Type from_byte(std::byte b)
 {
-    const std::size_t value = static_cast<std::size_t>(b);
-    if (static_cast<std::size_t>(Type::unknown) < value)
+    const std::uint8_t value = std::to_integer<std::uint8_t>(b);
+    if (static_cast<std::uint8_t>(Type::unknown) < value)
     {
         return Type::unknown;
     }

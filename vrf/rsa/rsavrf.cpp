@@ -492,8 +492,7 @@ std::vector<std::byte> construct_rsa_fdh_tbs(Type type, std::span<const std::byt
     const auto mgf1_salt_start = domain_separator_pos + 1;
     const auto data_start = mgf1_salt_start + static_cast<std::ptrdiff_t>(mgf1_salt.size());
 
-    std::ranges::transform(params.suite_string, suite_string_start,
-                           [](char c) { return static_cast<std::byte>(c); });
+    std::ranges::transform(params.suite_string, suite_string_start, [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_pos = domain_separator;
     std::ranges::copy(mgf1_salt, mgf1_salt_start);
     std::ranges::copy(data, data_start);
@@ -557,8 +556,7 @@ std::vector<std::byte> construct_rsa_pss_tbs(Type type, std::span<const std::byt
     const auto mgf1_salt_start = domain_separator_start + 1;
     const auto data_start = mgf1_salt_start + static_cast<std::ptrdiff_t>(mgf1_salt.size());
 
-    std::ranges::transform(params.suite_string, suite_string_start,
-                           [](char c) { return static_cast<std::byte>(c); });
+    std::ranges::transform(params.suite_string, suite_string_start, [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_start = domain_separator;
     std::ranges::copy(mgf1_salt, mgf1_salt_start);
     std::ranges::copy(data, data_start);
@@ -580,7 +578,7 @@ std::vector<std::byte> RSAProof::to_bytes() const
         return {};
     }
 
-    const std::byte type_byte = as_byte(get_type());
+    const std::byte type_byte = to_byte(get_type());
     std::vector<std::byte> ret;
     ret.reserve(1 + proof_.size());
     ret.push_back(type_byte);
@@ -653,8 +651,7 @@ std::vector<std::byte> RSAProof::get_vrf_value() const
     const auto domain_separator_pos = suite_string_start + static_cast<std::ptrdiff_t>(suite_string_len);
     const auto proof_start = domain_separator_pos + 1;
 
-    std::ranges::transform(params.suite_string, suite_string_start,
-                           [](char c) { return static_cast<std::byte>(c); });
+    std::ranges::transform(params.suite_string, suite_string_start, [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_pos = domain_separator;
     std::ranges::copy(proof_, proof_start);
 
@@ -937,8 +934,7 @@ RSAPublicKey &RSAPublicKey::operator=(RSAPublicKey &&rhs) noexcept
     return *this;
 }
 
-RSAPublicKey::RSAPublicKey(std::span<const std::byte> der_spki_with_type)
-    : PublicKey{Type::unknown}
+RSAPublicKey::RSAPublicKey(std::span<const std::byte> der_spki_with_type) : PublicKey{Type::unknown}
 {
     RSA_PK_Guard pk_guard{der_spki_with_type};
     if (!pk_guard.has_value())

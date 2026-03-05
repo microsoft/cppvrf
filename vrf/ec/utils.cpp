@@ -162,8 +162,7 @@ EC_POINT_Guard ecvrf_try_and_increment_method(Type type, const EC_GROUP_Guard &g
     const auto domain_separator_back_start = ctr_start + 1 /* ctr */;
 
     // Copy in everything except the counter value.
-    std::ranges::transform(params.suite_string, suite_string_start,
-                           [](char c) { return static_cast<std::byte>(c); });
+    std::ranges::transform(params.suite_string, suite_string_start, [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_front_start = domain_separator_front;
     std::ranges::copy(e2c_salt, e2c_salt_start);
     std::ranges::copy(data, data_start);

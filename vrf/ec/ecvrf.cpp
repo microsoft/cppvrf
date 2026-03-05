@@ -272,8 +272,7 @@ std::vector<std::byte> get_vrf_value_internal(const ECVRFParams &params, const E
     const auto cofactor_cleared_gamma_start = domain_separator_front_start + 1;
     const auto domain_separator_back_start = cofactor_cleared_gamma_start + static_cast<std::ptrdiff_t>(params.pt_len);
 
-    std::ranges::transform(params.suite_string, suite_string_start,
-                           [](char c) { return static_cast<std::byte>(c); });
+    std::ranges::transform(params.suite_string, suite_string_start, [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_front_start = domain_separator_front;
     std::ranges::copy_n(cofactor_cleared_gamma_buf.begin(), static_cast<std::ptrdiff_t>(params.pt_len),
                         cofactor_cleared_gamma_start);
@@ -339,7 +338,7 @@ std::vector<std::byte> ECProof::to_bytes() const
         return {};
     }
 
-    const std::byte type_byte = as_byte(get_type());
+    const std::byte type_byte = to_byte(get_type());
     std::vector<std::byte> ret;
     ret.reserve(1 + proof_.size());
     ret.push_back(type_byte);
@@ -755,7 +754,7 @@ SecureBuf ECSecretKey::to_secure_bytes() const
         return {};
     }
 
-    buf.get()[0] = as_byte(get_type());
+    buf.get()[0] = to_byte(get_type());
 
     const int written =
         BN_bn2binpad(sk_bn, reinterpret_cast<unsigned char *>(buf.get() + 1), static_cast<int>(params.q_len));

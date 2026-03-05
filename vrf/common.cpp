@@ -88,7 +88,7 @@ std::vector<std::byte> encode_public_key_to_der_spki_with_type(Type type, const 
     const std::byte *der_data_end = der_data_begin + der_data_len;
 
     std::vector<std::byte> buf{der_data_len + 1 /* for type byte */};
-    buf[0] = as_byte(type);
+    buf[0] = to_byte(type);
     std::copy(der_data_begin, der_data_end, buf.begin() + 1);
 
     OPENSSL_free(der_data);
@@ -163,7 +163,7 @@ SecureBuf encode_secret_key_to_der_pkcs8_with_type(vrf::Type type, const EVP_PKE
     if (buf.has_value())
     {
         // buf.has_value() is true only if the size is at least 1.
-        buf.get()[0] = as_byte(type);
+        buf.get()[0] = to_byte(type);
 
         // Copy in the value to the remaining buffer.
         std::copy_n(reinterpret_cast<const std::byte *>(der_data), der_data_len, buf.get() + 1);

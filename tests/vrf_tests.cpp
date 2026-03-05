@@ -50,7 +50,7 @@ void check_test_vector(const std::unique_ptr<SecretKey> &vrf_sk, const std::vect
 
     std::vector<std::byte> proof_bytes = proof->to_bytes();
     Type type = vrf_sk->get_type();
-    ASSERT_EQ(as_byte(type), proof_bytes[0]);
+    ASSERT_EQ(to_byte(type), proof_bytes[0]);
     proof_bytes.erase(proof_bytes.begin());
     ASSERT_EQ(expected_proof, proof_bytes);
 
@@ -279,7 +279,8 @@ TEST_P(VRFTest, InvalidProof)
 
     // Totally wrong size proof.
     {
-        std::vector<std::byte> invalid_proof_data(proof_bytes.begin(), proof_bytes.begin() + static_cast<std::ptrdiff_t>(proof_bytes.size() / 2));
+        std::vector<std::byte> invalid_proof_data(
+            proof_bytes.begin(), proof_bytes.begin() + static_cast<std::ptrdiff_t>(proof_bytes.size() / 2));
         auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
