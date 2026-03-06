@@ -46,7 +46,7 @@ ScalarType make_challenge(Type type, const EC_GROUP_Guard &group, Points &&...po
     const std::size_t suite_string_len = params.suite_string.size();
 
     const std::optional<std::size_t> challenge_input_buf_size =
-        safe_add(suite_string_len, 2u /* domain separators */, (sizeof...(Points) * params.pt_len));
+        safe_add(suite_string_len, 2U /* domain separators */, (sizeof...(Points) * params.pt_len));
     if (!challenge_input_buf_size.has_value() || !std::in_range<std::ptrdiff_t>(*challenge_input_buf_size))
     {
         GetLogger()->debug("make_challenge failed to compute challenge input buffer size.");
@@ -63,7 +63,7 @@ ScalarType make_challenge(Type type, const EC_GROUP_Guard &group, Points &&...po
     std::transform(params.suite_string.begin(), params.suite_string.end(), suite_string_start,
                    [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_front_start = domain_separator_front;
-    auto [success, written] = append_ecpoint_to_bytes(group, PointToBytesMethod::SEC1_COMPRESSED, bcg, points_start,
+    auto [success, written] = append_ecpoint_to_bytes(group, PointToBytesMethod::sec1_compressed, bcg, points_start,
                                                       std::forward<Points>(points)...);
     if (!success || challenge_buf.size() != written + suite_string_len + 2 /* domain separators */)
     {
@@ -144,9 +144,9 @@ std::tuple<bool, ECPoint, ScalarType, ScalarType> decode_proof(Type type, const 
         return {false, {}, {}, {}};
     }
 
-    const ECPoint gamma = bytes_to_point(group, {gamma_start, params.pt_len}, bcg);
-    const ScalarType challenge = bytes_to_int({challenge_start, params.c_len}, false);
-    const ScalarType s = bytes_to_int({s_start, params.q_len}, false);
+    ECPoint gamma = bytes_to_point(group, {gamma_start, params.pt_len}, bcg);
+    ScalarType challenge = bytes_to_int({challenge_start, params.c_len}, false);
+    ScalarType s = bytes_to_int({s_start, params.q_len}, false);
     if (!gamma.has_value() || !challenge.has_value() || !s.has_value())
     {
         GetLogger()->debug("decode_proof failed to decode one of the proof components.");
@@ -212,7 +212,7 @@ bool validate_public_key(Type type, const ECPoint &pk, const EC_GROUP_Guard &gro
     }
 
     // Check that the cofactor-cleared public key is not the point at infinity.
-    if (1 == EC_POINT_is_at_infinity(group.get(), cofactor_cleared_pk.get().get()) == 1)
+    if (1 == EC_POINT_is_at_infinity(group.get(), cofactor_cleared_pk.get().get()))
     {
         GetLogger()->debug(
             "validate_key found invalid public key: cofactor-cleared public key is the point at infinity.");
@@ -272,10 +272,10 @@ std::vector<std::byte> get_vrf_value_internal(const ECVRFParams &params, const E
     const auto cofactor_cleared_gamma_start = domain_separator_front_start + 1;
     const auto domain_separator_back_start = cofactor_cleared_gamma_start + static_cast<std::ptrdiff_t>(params.pt_len);
 
-    std::transform(params.suite_string.begin(), params.suite_string.end(), suite_string_start,
-                   [](char c) { return static_cast<std::byte>(c); });
+    std::ranges::transform(params.suite_string, suite_string_start, [](char c) { return static_cast<std::byte>(c); });
     *domain_separator_front_start = domain_separator_front;
-    std::copy_n(cofactor_cleared_gamma_buf.begin(), params.pt_len, cofactor_cleared_gamma_start);
+    std::ranges::copy_n(cofactor_cleared_gamma_buf.begin(), static_cast<std::ptrdiff_t>(params.pt_len),
+                        cofactor_cleared_gamma_start);
     *domain_separator_back_start = domain_separator_back;
 
     std::vector<std::byte> vrf_value = compute_hash(params.digest.data(), hash_buf);
@@ -330,7 +330,7 @@ std::vector<std::byte> ECProof::get_vrf_value() const
     return vrf_value;
 }
 
-std::vector<std::byte> ECProof::to_bytes()
+std::vector<std::byte> ECProof::to_bytes() const
 {
     if (!is_initialized())
     {
@@ -338,7 +338,7 @@ std::vector<std::byte> ECProof::to_bytes()
         return {};
     }
 
-    const std::byte type_byte = as_byte(get_type());
+    const std::byte type_byte = to_byte(get_type());
     std::vector<std::byte> ret;
     ret.reserve(1 + proof_.size());
     ret.push_back(type_byte);
@@ -366,11 +366,7 @@ void ECProof::from_bytes(std::span<const std::byte> data)
     *this = std::move(ec_proof);
 }
 
-ECProof::ECProof(const ECProof &source)
-{
-    ECProof proof_copy{source.get_type(), source.proof_};
-    *this = std::move(proof_copy);
-}
+ECProof::ECProof(const ECProof &source) = default;
 
 ECProof &ECProof::operator=(ECProof &&rhs) noexcept
 {
@@ -386,7 +382,7 @@ ECProof &ECProof::operator=(ECProof &&rhs) noexcept
     return *this;
 }
 
-ECSecretKey::ECSecretKey(Type type) : SecretKey{Type::UNKNOWN}, sk_{}, pk_{}, group_{}
+ECSecretKey::ECSecretKey(Type type) : SecretKey{Type::unknown}
 {
     ScalarType sk{true};
     if (!sk.has_value())
@@ -445,7 +441,7 @@ ECSecretKey::ECSecretKey(Type type) : SecretKey{Type::UNKNOWN}, sk_{}, pk_{}, gr
     GetLogger()->trace("ECSecretKey constructor generated key pair for VRF type {}.", to_string(type));
 }
 
-ECSecretKey::ECSecretKey(Type type, ScalarType sk) : SecretKey{Type::UNKNOWN}, sk_{}, pk_{}, group_{}
+ECSecretKey::ECSecretKey(Type type, ScalarType sk) : SecretKey{Type::unknown}
 {
     if (!sk.has_value())
     {
@@ -502,7 +498,7 @@ ECSecretKey::ECSecretKey(Type type, ScalarType sk) : SecretKey{Type::UNKNOWN}, s
                        to_string(type));
 }
 
-std::unique_ptr<PublicKey> ECSecretKey::get_public_key()
+std::unique_ptr<PublicKey> ECSecretKey::get_public_key() const
 {
     if (!is_initialized())
     {
@@ -538,7 +534,7 @@ ECSecretKey &ECSecretKey::operator=(ECSecretKey &&rhs) noexcept
     return *this;
 }
 
-ECSecretKey::ECSecretKey(const ECSecretKey &source) : sk_{}, pk_{}, group_{}
+ECSecretKey::ECSecretKey(const ECSecretKey &source) : SecretKey(source)
 {
     if (!source.is_initialized())
     {
@@ -723,13 +719,13 @@ std::unique_ptr<Proof> ECSecretKey::get_vrf_proof(std::span<const std::byte> in)
     return ret;
 }
 
-std::vector<std::byte> ECSecretKey::to_bytes()
+std::vector<std::byte> ECSecretKey::to_bytes() const
 {
     GetLogger()->err("ECSecretKey::to_bytes is disabled; use to_secure_bytes() instead.");
     return {};
 }
 
-SecureBuf ECSecretKey::to_secure_bytes()
+SecureBuf ECSecretKey::to_secure_bytes() const
 {
     if (!is_initialized())
     {
@@ -758,11 +754,11 @@ SecureBuf ECSecretKey::to_secure_bytes()
         return {};
     }
 
-    buf.get()[0] = as_byte(get_type());
+    buf.get()[0] = to_byte(get_type());
 
     const int written =
         BN_bn2binpad(sk_bn, reinterpret_cast<unsigned char *>(buf.get() + 1), static_cast<int>(params.q_len));
-    if (written != static_cast<int>(params.q_len))
+    if (std::cmp_not_equal(written, params.q_len))
     {
         GetLogger()->warn("ECSecretKey::to_secure_bytes failed to convert secret key scalar to bytes.");
         return {};
@@ -826,7 +822,7 @@ void ECSecretKey::from_bytes(std::span<const std::byte> data)
     *this = std::move(secret_key);
 }
 
-ECPublicKey::ECPublicKey(const ECPublicKey &source) : PublicKey{Type::UNKNOWN}, pk_{}, group_{}
+ECPublicKey::ECPublicKey(const ECPublicKey &source) : PublicKey{Type::unknown}
 {
     ECPoint pk_copy{source.pk_};
     EC_GROUP_Guard group_copy{source.group_};
@@ -859,7 +855,8 @@ ECPublicKey &ECPublicKey::operator=(ECPublicKey &&rhs) noexcept
     return *this;
 }
 
-ECPublicKey::ECPublicKey(Type type, EC_GROUP_Guard group, ECPoint pk) : PublicKey{Type::UNKNOWN}, pk_{}, group_{}
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+ECPublicKey::ECPublicKey(Type type, EC_GROUP_Guard group, ECPoint pk) : PublicKey{Type::unknown}
 {
     const ECVRFParams params = get_ecvrf_params(type);
     if (params.algorithm_name.empty())
@@ -885,7 +882,7 @@ ECPublicKey::ECPublicKey(Type type, EC_GROUP_Guard group, ECPoint pk) : PublicKe
                        to_string(type));
 }
 
-ECPublicKey::ECPublicKey(Type type, std::span<const std::byte> der_spki) : PublicKey{Type::UNKNOWN}, pk_{}, group_{}
+ECPublicKey::ECPublicKey(Type type, std::span<const std::byte> der_spki) : PublicKey{Type::unknown}
 {
     if (!is_ec_type(type))
     {
@@ -1019,7 +1016,7 @@ std::pair<bool, std::vector<std::byte>> ECPublicKey::verify_vrf_proof(std::span<
         return {false, {}};
     }
 
-    const auto [success, gamma, challenge, s] = decode_proof(type, group_, ec_proof->proof_, bcg);
+    auto [success, gamma, challenge, s] = decode_proof(type, group_, ec_proof->proof_, bcg);
     if (!success)
     {
         GetLogger()->warn("ECPublicKey::verify_vrf_proof failed to decode proof.");
@@ -1097,7 +1094,7 @@ std::pair<bool, std::vector<std::byte>> ECPublicKey::verify_vrf_proof(std::span<
     return {true, std::move(vrf_value)};
 }
 
-std::vector<std::byte> ECPublicKey::to_bytes()
+std::vector<std::byte> ECPublicKey::to_bytes() const
 {
     if (!is_initialized())
     {
@@ -1113,7 +1110,7 @@ std::vector<std::byte> ECPublicKey::to_bytes()
     }
 
     // Get the public key bytes.
-    point_to_bytes_ptr_t point_to_bytes = get_point_to_bytes_method(PointToBytesMethod::SEC1_COMPRESSED);
+    point_to_bytes_ptr_t point_to_bytes = get_point_to_bytes_method(PointToBytesMethod::sec1_compressed);
     if (nullptr == point_to_bytes)
     {
         GetLogger()->err("ECPublicKey::to_bytes failed to get point_to_bytes method.");
@@ -1151,11 +1148,13 @@ std::vector<std::byte> ECPublicKey::to_bytes()
         return {};
     }
 
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     OSSL_PARAM pkey_params[] = {
         OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, const_cast<char *>(curve_sn), 0),
         OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pk_bytes.data(), pk_bytes.size()), OSSL_PARAM_END};
 
     EVP_PKEY_Guard pkey{nullptr};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
     if (1 != EVP_PKEY_fromdata(pctx.get(), pkey.free_and_get_addr(), EVP_PKEY_PUBLIC_KEY, pkey_params))
     {
         GetLogger()->warn("ECPublicKey::to_bytes failed to create EVP_PKEY from data.");

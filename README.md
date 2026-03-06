@@ -175,5 +175,5 @@ For simple examples, see [vrf/stdout_log.cpp](vrf/stdout_log.cpp) and [tests/log
 
 Once a `std::shared_ptr<vrf::Logger>` instance has been created, it can be used to log messages at different log levels (see `vrf::LogLevel` in [vrf/log.h](vrf/log.h)).
 It can also be used to set a (minimum) log level, so that logs at any lower level will not be logged.
-The default log level is `vrf::LogLevel::INFO`.
+The default log level is `vrf::LogLevel::info`.
 

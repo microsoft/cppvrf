@@ -78,7 +78,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
         return {};
     }
 
-    rsa::RSAVRFParams params = rsa::get_rsavrf_params(type);
+    const rsa::RSAVRFParams params = rsa::get_rsavrf_params(type);
     if (params.algorithm_name.empty())
     {
         GetLogger()->err("Unsupported VRF type for RSA key generation.");
@@ -201,14 +201,14 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
         return {};
     }
 
-    bool ok = OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_N, n.get()) &&
-              OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_E, e_bn.get()) &&
-              OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_D, d.get()) &&
-              OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_FACTOR1, p.get()) &&
-              OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_FACTOR2, q.get()) &&
-              OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_EXPONENT1, dmp1.get()) &&
-              OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_EXPONENT2, dmq1.get()) &&
-              OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_COEFFICIENT1, iqmp.get());
+    const bool ok = OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_N, n.get()) &&
+                    OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_E, e_bn.get()) &&
+                    OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_D, d.get()) &&
+                    OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_FACTOR1, p.get()) &&
+                    OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_FACTOR2, q.get()) &&
+                    OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_EXPONENT1, dmp1.get()) &&
+                    OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_EXPONENT2, dmq1.get()) &&
+                    OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_RSA_COEFFICIENT1, iqmp.get());
 
     if (!ok)
     {
@@ -218,7 +218,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
     }
 
     OSSL_PARAM *paramlist = OSSL_PARAM_BLD_to_param(bld);
-    if (!paramlist)
+    if (nullptr == paramlist)
     {
         OSSL_PARAM_BLD_free(bld);
         GetLogger()->err("OSSL_PARAM_BLD_to_param failed.");
@@ -336,7 +336,7 @@ std::vector<std::byte> parse_hex_bytes(std::string_view s)
         }
         else
         {
-            unsigned next_byte = (static_cast<unsigned>(hi) << 4) | static_cast<unsigned>(v);
+            unsigned next_byte = (static_cast<unsigned>(hi) << 4U) | static_cast<unsigned>(v);
             out.push_back(static_cast<std::byte>(next_byte));
             hi = -1;
         }
@@ -354,13 +354,13 @@ RSA_VRF_TestVectorParams get_rsa_vrf_test_vector_params(Type type)
 {
     switch (type)
     {
-    case RSA_FDH_VRF_RSA2048_SHA256:
+    case rsa_fdh_vrf_rsa2048_sha256:
         return RSA_FDH_2048_SHA256_PARAMS;
-    case RSA_FDH_VRF_RSA3072_SHA256:
+    case rsa_fdh_vrf_rsa3072_sha256:
         return RSA_FDH_3072_SHA256_PARAMS;
-    case RSA_FDH_VRF_RSA4096_SHA384:
+    case rsa_fdh_vrf_rsa4096_sha384:
         return RSA_FDH_4096_SHA384_PARAMS;
-    case RSA_FDH_VRF_RSA4096_SHA512:
+    case rsa_fdh_vrf_rsa4096_sha512:
         return RSA_FDH_4096_SHA512_PARAMS;
     default:
         GetLogger()->err("No test vector parameters defined for VRF type {}.", to_string(type));
@@ -372,7 +372,7 @@ EC_VRF_TestVectorParams get_ec_vrf_test_vector_params(Type type)
 {
     switch (type)
     {
-    case EC_VRF_P256_SHA256_TAI:
+    case ec_vrf_p256_sha256_tai:
         return EC_VRF_P256_SHA256_TAI_PARAMS;
     default:
         GetLogger()->err("No test vector parameters defined for VRF type {}.", to_string(type));

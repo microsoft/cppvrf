@@ -88,7 +88,7 @@ std::vector<std::byte> encode_public_key_to_der_spki_with_type(Type type, const 
     const std::byte *der_data_end = der_data_begin + der_data_len;
 
     std::vector<std::byte> buf{der_data_len + 1 /* for type byte */};
-    buf[0] = as_byte(type);
+    buf[0] = to_byte(type);
     std::copy(der_data_begin, der_data_end, buf.begin() + 1);
 
     OPENSSL_free(der_data);
@@ -163,7 +163,7 @@ SecureBuf encode_secret_key_to_der_pkcs8_with_type(vrf::Type type, const EVP_PKE
     if (buf.has_value())
     {
         // buf.has_value() is true only if the size is at least 1.
-        buf.get()[0] = as_byte(type);
+        buf.get()[0] = to_byte(type);
 
         // Copy in the value to the remaining buffer.
         std::copy_n(reinterpret_cast<const std::byte *>(der_data), der_data_len, buf.get() + 1);
@@ -203,16 +203,16 @@ std::pair<vrf::Type, std::span<const std::byte>> extract_type_from_span(std::spa
     if (data.empty())
     {
         GetLogger()->debug("extract_type_from_span called with empty data.");
-        return {vrf::Type::UNKNOWN, std::span<const std::byte>{}};
+        return {vrf::Type::unknown, std::span<const std::byte>{}};
     }
 
     const std::uint8_t type_byte = std::to_integer<std::uint8_t>(data[0]);
 
     // First check that this is in range, i.e., less than vrf::Type::UNKNOWN.
-    if (static_cast<std::size_t>(type_byte) >= static_cast<std::size_t>(vrf::Type::UNKNOWN))
+    if (static_cast<std::size_t>(type_byte) >= static_cast<std::size_t>(vrf::Type::unknown))
     {
         GetLogger()->debug("extract_type_from_span called with invalid type byte: {}", type_byte);
-        return {vrf::Type::UNKNOWN, std::span<const std::byte>{}};
+        return {vrf::Type::unknown, std::span<const std::byte>{}};
     }
 
     // We can safely static_cast here since we've verified that the type byte is in range.

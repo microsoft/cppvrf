@@ -5,10 +5,6 @@
 #include "vrf/ec/utils.h"
 #include <cstring>
 
-#define ECVRF_PARAMS(CURVE, COFACTOR, DIGEST, B2I, P2B, B2P, E2C_SALT, E2C, NONCE, SUITE_STRING, FLEN, CLEN, QLEN,     \
-                     PTLEN, HLEN)                                                                                      \
-    "EC", CURVE, COFACTOR, DIGEST, B2I, P2B, B2P, E2C_SALT, E2C, NONCE, SUITE_STRING, FLEN, CLEN, QLEN, PTLEN, HLEN
-
 namespace vrf::ec
 {
 
@@ -18,11 +14,23 @@ ECVRFParams get_ecvrf_params(Type type) noexcept
 {
     switch (type)
     {
-    case EC_VRF_P256_SHA256_TAI:
-        return ECVRFParams{ECVRF_PARAMS(Curve::PRIME256V1, 1, "SHA256", BytesToIntMethod::BE,
-                                        PointToBytesMethod::SEC1_COMPRESSED, BytesToPointMethod::SEC1,
-                                        E2CSaltMethod::PUBLIC_KEY_COMPRESSED, E2CMethod::TRY_AND_INCREMENT,
-                                        NonceGenMethod::RFC6979, "\001", 32, 16, 32, 33, 32)};
+    case ec_vrf_p256_sha256_tai:
+        return ECVRFParams{.algorithm_name = "EC",
+                           .curve = Curve::prime256v1,
+                           .cofactor = 1,
+                           .digest = "SHA256",
+                           .bytes_to_int = BytesToIntMethod::big_endian,
+                           .point_to_bytes = PointToBytesMethod::sec1_compressed,
+                           .bytes_to_point = BytesToPointMethod::sec1,
+                           .e2c_salt = E2CSaltMethod::public_key_compressed,
+                           .e2c = E2CMethod::try_and_increment,
+                           .nonce_gen = NonceGenMethod::rfc6979,
+                           .suite_string = "\001",
+                           .f_len = 32,
+                           .c_len = 16,
+                           .q_len = 32,
+                           .pt_len = 33,
+                           .h_len = 32};
     default:
         return ECVRFParams{};
     }

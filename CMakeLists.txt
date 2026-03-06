@@ -23,7 +23,7 @@ endif()
 # Where to look for our helper modules.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-project(cppvrf VERSION 1.4.0 LANGUAGES CXX)
+project(cppvrf VERSION 1.5.0 LANGUAGES CXX)
 
 # Define additional directory path variables.
 include(GNUInstallDirs)

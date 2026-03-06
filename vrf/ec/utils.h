@@ -19,21 +19,21 @@ namespace vrf::ec
 
 enum class PointCompression : int
 {
-    COMPRESSED = POINT_CONVERSION_COMPRESSED,
-    UNCOMPRESSED = POINT_CONVERSION_UNCOMPRESSED,
+    compressed = POINT_CONVERSION_COMPRESSED,
+    uncompressed = POINT_CONVERSION_UNCOMPRESSED,
 };
 
 enum class PointToBytesMethod
 {
-    UNDEFINED = 0,
-    SEC1_UNCOMPRESSED = 1,
-    SEC1_COMPRESSED = 2,
+    undefined = 0,
+    sec1_uncompressed = 1,
+    sec1_compressed = 2,
 };
 
 enum class BytesToPointMethod
 {
-    UNDEFINED = 0,
-    SEC1 = 1,
+    undefined = 0,
+    sec1 = 1,
 };
 
 using point_to_bytes_ptr_t = std::size_t (*)(const EC_GROUP_Guard &group, const EC_POINT_Guard &pt, BN_CTX_Guard &bcg,
@@ -108,8 +108,8 @@ std::pair<bool, std::size_t> append_ecpoint_to_bytes(const EC_GROUP_Guard &group
 
 enum class E2CSaltMethod
 {
-    UNDEFINED = 0,
-    PUBLIC_KEY_COMPRESSED = 1,
+    undefined = 0,
+    public_key_compressed = 1,
 };
 
 using e2c_salt_ptr_t = std::vector<std::byte> (*)(Type type, const EC_GROUP_Guard &group, const EC_POINT_Guard &pk,
@@ -120,8 +120,8 @@ e2c_salt_ptr_t get_e2c_salt_method(E2CSaltMethod method);
 
 enum class E2CMethod
 {
-    UNDEFINED = 0,
-    TRY_AND_INCREMENT = 1,
+    undefined = 0,
+    try_and_increment = 1,
 };
 
 using e2c_ptr_t = EC_POINT_Guard (*)(Type type, const EC_GROUP_Guard &group, std::span<const std::byte> e2c_salt,
@@ -132,8 +132,8 @@ e2c_ptr_t get_e2c_method(E2CMethod method);
 
 enum class NonceGenMethod
 {
-    UNDEFINED = 0,
-    RFC6979 = 1,
+    undefined = 0,
+    rfc6979 = 1,
 };
 
 using nonce_gen_ptr_t = BIGNUM_Guard (*)(Type type, const EC_GROUP_Guard &group, const BIGNUM_Guard &sk,

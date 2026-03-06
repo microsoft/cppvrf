@@ -14,7 +14,7 @@
 namespace vrf::ec
 {
 
-class ECProof : public Proof
+class ECProof final : public Proof
 {
   public:
     ECProof() = default;
@@ -31,7 +31,7 @@ class ECProof : public Proof
     }
 
     [[nodiscard]]
-    std::vector<std::byte> to_bytes() override;
+    std::vector<std::byte> to_bytes() const override;
 
     void from_bytes(std::span<const std::byte> data) override;
 
@@ -41,14 +41,14 @@ class ECProof : public Proof
         return !proof_.empty() && is_ec_type(get_type());
     }
 
+    ECProof &operator=(const ECProof &) = delete;
+
   private:
     ECProof(const ECProof &source);
 
     ECProof(Type type, std::vector<std::byte> proof) : Proof{type}, proof_{std::move(proof)}
     {
     }
-
-    ECProof &operator=(const ECProof &) = delete;
 
     ECProof &operator=(ECProof &&) noexcept;
 
@@ -57,21 +57,21 @@ class ECProof : public Proof
         *this = std::move(source);
     }
 
-    std::vector<std::byte> proof_{};
+    std::vector<std::byte> proof_;
 
     friend class ECSecretKey;
 
     friend class ECPublicKey;
 };
 
-class ECSecretKey : public SecretKey
+class ECSecretKey final : public SecretKey
 {
   public:
     ECSecretKey() = default;
 
     ~ECSecretKey() override = default;
 
-    ECSecretKey(Type type);
+    explicit ECSecretKey(Type type);
 
     ECSecretKey(Type type, ScalarType sk);
 
@@ -81,10 +81,10 @@ class ECSecretKey : public SecretKey
     }
 
     [[nodiscard]]
-    std::vector<std::byte> to_bytes() override;
+    std::vector<std::byte> to_bytes() const override;
 
     [[nodiscard]]
-    SecureBuf to_secure_bytes() override;
+    SecureBuf to_secure_bytes() const override;
 
     void from_bytes(std::span<const std::byte> data) override;
 
@@ -98,7 +98,9 @@ class ECSecretKey : public SecretKey
     }
 
     [[nodiscard]]
-    std::unique_ptr<PublicKey> get_public_key() override;
+    std::unique_ptr<PublicKey> get_public_key() const override;
+
+    ECSecretKey &operator=(const ECSecretKey &) = delete;
 
   private:
     ECSecretKey &operator=(ECSecretKey &&) noexcept;
@@ -108,18 +110,16 @@ class ECSecretKey : public SecretKey
         *this = std::move(source);
     }
 
-    ECSecretKey &operator=(const ECSecretKey &) = delete;
-
     ECSecretKey(const ECSecretKey &);
 
-    ScalarType sk_{};
+    ScalarType sk_;
 
-    ECPoint pk_{};
+    ECPoint pk_;
 
-    EC_GROUP_Guard group_{};
+    EC_GROUP_Guard group_;
 };
 
-class ECPublicKey : public PublicKey
+class ECPublicKey final : public PublicKey
 {
   public:
     ECPublicKey() = default;
@@ -138,7 +138,7 @@ class ECPublicKey : public PublicKey
     }
 
     [[nodiscard]]
-    std::vector<std::byte> to_bytes() override;
+    std::vector<std::byte> to_bytes() const override;
 
     void from_bytes(std::span<const std::byte> data) override;
 
@@ -148,12 +148,12 @@ class ECPublicKey : public PublicKey
         return std::unique_ptr<ECPublicKey>{new ECPublicKey(*this)};
     }
 
+    ECPublicKey &operator=(const ECPublicKey &) = delete;
+
   private:
     ECPublicKey(Type type, EC_GROUP_Guard, ECPoint);
 
     ECPublicKey(Type type, std::span<const std::byte> der_spki);
-
-    ECPublicKey &operator=(const ECPublicKey &) = delete;
 
     ECPublicKey(const ECPublicKey &);
 
@@ -164,9 +164,9 @@ class ECPublicKey : public PublicKey
         *this = std::move(source);
     }
 
-    ECPoint pk_{};
+    ECPoint pk_;
 
-    EC_GROUP_Guard group_{};
+    EC_GROUP_Guard group_;
 
     friend class ECSecretKey;
 };

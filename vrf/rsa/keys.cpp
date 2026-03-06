@@ -21,10 +21,12 @@ namespace
 bool set_rsa_keygen_params(EVP_PKEY_CTX_Guard &pctx, Type type)
 {
     RSAVRFParams params = get_rsavrf_params(type);
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     const OSSL_PARAM params_to_set[] = {OSSL_PARAM_construct_uint(OSSL_PKEY_PARAM_RSA_BITS, &params.bits),
                                         OSSL_PARAM_construct_uint(OSSL_PKEY_PARAM_RSA_PRIMES, &params.primes),
                                         OSSL_PARAM_construct_uint(OSSL_PKEY_PARAM_RSA_E, &params.e), OSSL_PARAM_END};
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
     return (1 == EVP_PKEY_CTX_set_params(pctx.get(), params_to_set));
 }
 
@@ -41,10 +43,10 @@ std::vector<std::byte> generate_mgf1_salt(const EVP_PKEY_Guard &pkey)
     // In the salt, first we have a 4-byte big-endian representation of the length of the RSA modulus.
     const std::size_t n_len = static_cast<std::size_t>(BN_num_bytes(n.get()));
     std::vector<std::byte> salt(4 + n_len);
-    salt[0] = static_cast<std::byte>((n_len >> 24) & 0xFF);
-    salt[1] = static_cast<std::byte>((n_len >> 16) & 0xFF);
-    salt[2] = static_cast<std::byte>((n_len >> 8) & 0xFF);
-    salt[3] = static_cast<std::byte>(n_len & 0xFF);
+    salt[0] = static_cast<std::byte>((n_len >> 24U) & 0xFFU);
+    salt[1] = static_cast<std::byte>((n_len >> 16U) & 0xFFU);
+    salt[2] = static_cast<std::byte>((n_len >> 8U) & 0xFFU);
+    salt[3] = static_cast<std::byte>(n_len & 0xFFU);
 
     // Next, convert bn_n to a byte array with I2OSP and append to the salt.
     if (n_len != int_to_bytes_big_endian(n, std::span<std::byte>(salt.data() + 4, n_len)))
@@ -194,7 +196,7 @@ EVP_PKEY_Guard RSA_SK_Guard::GenerateRSAKey(Type type)
     return pkey;
 }
 
-RSA_SK_Guard::RSA_SK_Guard(Type type) : type_{Type::UNKNOWN}, pkey_{nullptr}
+RSA_SK_Guard::RSA_SK_Guard(Type type)
 {
     EVP_PKEY_Guard pkey{GenerateRSAKey(type)};
     if (!pkey.has_value())
@@ -209,7 +211,7 @@ RSA_SK_Guard::RSA_SK_Guard(Type type) : type_{Type::UNKNOWN}, pkey_{nullptr}
     }
 }
 
-RSA_SK_Guard::RSA_SK_Guard(Type type, std::span<const std::byte> der_pkcs8) : type_{Type::UNKNOWN}, pkey_{nullptr}
+RSA_SK_Guard::RSA_SK_Guard(Type type, std::span<const std::byte> der_pkcs8)
 {
     if (!is_rsa_type(type))
     {
@@ -272,7 +274,7 @@ RSA_PK_Guard &RSA_PK_Guard::operator=(RSA_PK_Guard &&rhs) noexcept
     return *this;
 }
 
-RSA_PK_Guard::RSA_PK_Guard(const RSA_SK_Guard &sk_guard) : type_{Type::UNKNOWN}, pkey_{}
+RSA_PK_Guard::RSA_PK_Guard(const RSA_SK_Guard &sk_guard)
 {
     if (!sk_guard.has_value())
     {
@@ -302,7 +304,7 @@ RSA_PK_Guard::RSA_PK_Guard(const RSA_SK_Guard &sk_guard) : type_{Type::UNKNOWN},
     GetLogger()->trace("RSA_PK_Guard successfully initialized from RSA_SK_Guard for VRF type {}.", to_string(type_));
 }
 
-RSA_PK_Guard::RSA_PK_Guard(std::span<const std::byte> der_spki_with_type) : type_(Type::UNKNOWN), pkey_(nullptr)
+RSA_PK_Guard::RSA_PK_Guard(std::span<const std::byte> der_spki_with_type)
 {
     const auto [type, der_spki] = extract_type_from_span(der_spki_with_type);
     GetLogger()->trace("RSA_PK_Guard constructor extracted VRF type {} from input byte vector of size {}.",

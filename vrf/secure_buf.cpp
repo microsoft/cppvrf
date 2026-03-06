@@ -43,7 +43,13 @@ SecureBuf::~SecureBuf()
     size_ = 0;
     buf_ = nullptr;
 
-    GetLogger()->trace("SecureBuf at address {:p} securely cleared and freed.", buf_addr);
+    try
+    {
+        GetLogger()->trace("SecureBuf at address {:p} securely cleared and freed.", buf_addr);
+    }
+    catch (...) // NOLINT(bugprone-empty-catch)
+    {
+    }
 }
 
 void SecureBuf::Cleanse(void *ptr, std::size_t size)

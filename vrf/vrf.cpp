@@ -16,16 +16,14 @@ std::unique_ptr<SecretKey> VRF::Create(Type type)
         GetLogger()->trace("Creating RSA VRF secret key of type {}.", to_string(type));
         return std::unique_ptr<SecretKey>{new rsa::RSASecretKey{type}};
     }
-    else if (is_ec_type(type))
+    if (is_ec_type(type))
     {
         GetLogger()->trace("Creating EC VRF secret key of type {}.", to_string(type));
         return std::unique_ptr<SecretKey>{new ec::ECSecretKey{type}};
     }
-    else
-    {
-        GetLogger()->warn("VRF type {} is not supported", to_string(type));
-        return nullptr;
-    }
+
+    GetLogger()->warn("VRF type {} is not supported", to_string(type));
+    return nullptr;
 }
 
 std::unique_ptr<Proof> VRF::ProofFromBytes(std::span<const std::byte> data)

@@ -15,7 +15,7 @@
 namespace vrf::rsa
 {
 
-class RSAProof : public Proof
+class RSAProof final : public Proof
 {
   public:
     RSAProof() = default;
@@ -32,7 +32,7 @@ class RSAProof : public Proof
     }
 
     [[nodiscard]]
-    std::vector<std::byte> to_bytes() override;
+    std::vector<std::byte> to_bytes() const override;
 
     void from_bytes(std::span<const std::byte> data) override;
 
@@ -42,14 +42,14 @@ class RSAProof : public Proof
         return !proof_.empty() && is_rsa_type(get_type());
     }
 
+    RSAProof &operator=(const RSAProof &) = delete;
+
   private:
     RSAProof(const RSAProof &source);
 
     RSAProof(Type type, std::vector<std::byte> proof) : Proof{type}, proof_{std::move(proof)}
     {
     }
-
-    RSAProof &operator=(const RSAProof &) = delete;
 
     RSAProof &operator=(RSAProof &&) noexcept;
 
@@ -58,23 +58,23 @@ class RSAProof : public Proof
         *this = std::move(source);
     }
 
-    std::vector<std::byte> proof_{};
+    std::vector<std::byte> proof_;
 
     friend class RSASecretKey;
 
     friend class RSAPublicKey;
 };
 
-class RSASecretKey : public SecretKey
+class RSASecretKey final : public SecretKey
 {
   public:
     RSASecretKey() = default;
 
     ~RSASecretKey() override = default;
 
-    RSASecretKey(Type type);
+    explicit RSASecretKey(Type type);
 
-    RSASecretKey(RSA_SK_Guard sk_guard);
+    explicit RSASecretKey(RSA_SK_Guard sk_guard);
 
     [[nodiscard]]
     std::unique_ptr<Proof> get_vrf_proof(std::span<const std::byte> in) override;
@@ -87,10 +87,10 @@ class RSASecretKey : public SecretKey
     }
 
     [[nodiscard]]
-    std::vector<std::byte> to_bytes() override;
+    std::vector<std::byte> to_bytes() const override;
 
     [[nodiscard]]
-    SecureBuf to_secure_bytes() override;
+    SecureBuf to_secure_bytes() const override;
 
     void from_bytes(std::span<const std::byte> data) override;
 
@@ -101,7 +101,9 @@ class RSASecretKey : public SecretKey
     }
 
     [[nodiscard]]
-    std::unique_ptr<PublicKey> get_public_key() override;
+    std::unique_ptr<PublicKey> get_public_key() const override;
+
+    RSASecretKey &operator=(const RSASecretKey &) = delete;
 
   private:
     RSASecretKey &operator=(RSASecretKey &&) noexcept;
@@ -111,18 +113,16 @@ class RSASecretKey : public SecretKey
         *this = std::move(source);
     }
 
-    RSASecretKey &operator=(const RSASecretKey &) = delete;
-
     RSASecretKey(const RSASecretKey &);
 
-    RSA_SK_Guard sk_guard_{};
+    RSA_SK_Guard sk_guard_;
 
-    RSA_PK_Guard pk_guard_{};
+    RSA_PK_Guard pk_guard_;
 
-    std::vector<std::byte> mgf1_salt_{};
+    std::vector<std::byte> mgf1_salt_;
 };
 
-class RSAPublicKey : public PublicKey
+class RSAPublicKey final : public PublicKey
 {
   public:
     RSAPublicKey() = default;
@@ -140,7 +140,7 @@ class RSAPublicKey : public PublicKey
     }
 
     [[nodiscard]]
-    std::vector<std::byte> to_bytes() override;
+    std::vector<std::byte> to_bytes() const override;
 
     void from_bytes(std::span<const std::byte> data) override;
 
@@ -150,12 +150,12 @@ class RSAPublicKey : public PublicKey
         return std::unique_ptr<RSAPublicKey>{new RSAPublicKey(*this)};
     }
 
+    RSAPublicKey &operator=(const RSAPublicKey &) = delete;
+
   private:
-    RSAPublicKey(std::span<const std::byte> der_spki_with_type);
+    explicit RSAPublicKey(std::span<const std::byte> der_spki_with_type);
 
     RSAPublicKey(Type type, RSA_PK_Guard pk_guard);
-
-    RSAPublicKey &operator=(const RSAPublicKey &) = delete;
 
     RSAPublicKey(const RSAPublicKey &);
 
@@ -166,9 +166,9 @@ class RSAPublicKey : public PublicKey
         *this = std::move(source);
     }
 
-    RSA_PK_Guard pk_guard_{};
+    RSA_PK_Guard pk_guard_;
 
-    std::vector<std::byte> mgf1_salt_{};
+    std::vector<std::byte> mgf1_salt_;
 
     friend class RSASecretKey;
 };

@@ -11,13 +11,13 @@ namespace vrf::rsa
 
 struct RSAVRFParams
 {
-    std::string_view algorithm_name{};
+    std::string_view algorithm_name;
     unsigned bits = 0;
     unsigned primes = 0;
     unsigned e = 0;
-    std::string_view digest{};
+    std::string_view digest;
     int pad_mode = 0;
-    std::string_view suite_string{};
+    std::string_view suite_string;
 };
 
 [[nodiscard]]

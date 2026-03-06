@@ -50,7 +50,7 @@ void check_test_vector(const std::unique_ptr<SecretKey> &vrf_sk, const std::vect
 
     std::vector<std::byte> proof_bytes = proof->to_bytes();
     Type type = vrf_sk->get_type();
-    ASSERT_EQ(as_byte(type), proof_bytes[0]);
+    ASSERT_EQ(to_byte(type), proof_bytes[0]);
     proof_bytes.erase(proof_bytes.begin());
     ASSERT_EQ(expected_proof, proof_bytes);
 
@@ -279,7 +279,8 @@ TEST_P(VRFTest, InvalidProof)
 
     // Totally wrong size proof.
     {
-        std::vector<std::byte> invalid_proof_data(proof_bytes.begin(), proof_bytes.begin() + proof_bytes.size() / 2);
+        std::vector<std::byte> invalid_proof_data(
+            proof_bytes.begin(), proof_bytes.begin() + static_cast<std::ptrdiff_t>(proof_bytes.size() / 2));
         auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
@@ -342,7 +343,7 @@ TEST_P(VRFTest, InvalidPublicKey)
 
 TEST(VRFTest, InputFlexibility)
 {
-    vrf::Type type = vrf::Type::RSA_FDH_VRF_RSA2048_SHA256;
+    vrf::Type type = vrf::Type::rsa_fdh_vrf_rsa2048_sha256;
     auto sk = vrf::VRF::Create(type);
     auto pk = sk->get_public_key();
 
@@ -464,15 +465,15 @@ TEST_P(VRFTest, SKSerializationVerifyCross)
 }
 
 INSTANTIATE_TEST_SUITE_P(RSAVRFTypes, VRFTest,
-                         testing::Values(vrf::Type::RSA_FDH_VRF_RSA2048_SHA256, vrf::Type::RSA_FDH_VRF_RSA3072_SHA256,
-                                         vrf::Type::RSA_FDH_VRF_RSA4096_SHA384, vrf::Type::RSA_FDH_VRF_RSA4096_SHA512,
-                                         vrf::Type::RSA_PSS_NOSALT_VRF_RSA2048_SHA256,
-                                         vrf::Type::RSA_PSS_NOSALT_VRF_RSA3072_SHA256,
-                                         vrf::Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA384,
-                                         vrf::Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA512),
+                         testing::Values(vrf::Type::rsa_fdh_vrf_rsa2048_sha256, vrf::Type::rsa_fdh_vrf_rsa3072_sha256,
+                                         vrf::Type::rsa_fdh_vrf_rsa4096_sha384, vrf::Type::rsa_fdh_vrf_rsa4096_sha512,
+                                         vrf::Type::rsa_pss_nosalt_vrf_rsa2048_sha256,
+                                         vrf::Type::rsa_pss_nosalt_vrf_rsa3072_sha256,
+                                         vrf::Type::rsa_pss_nosalt_vrf_rsa4096_sha384,
+                                         vrf::Type::rsa_pss_nosalt_vrf_rsa4096_sha512),
                          testing::PrintToStringParamName());
 
-INSTANTIATE_TEST_SUITE_P(ECVRFTypes, VRFTest, testing::Values(vrf::Type::EC_VRF_P256_SHA256_TAI),
+INSTANTIATE_TEST_SUITE_P(ECVRFTypes, VRFTest, testing::Values(vrf::Type::ec_vrf_p256_sha256_tai),
                          testing::PrintToStringParamName());
 
 class RSATestVectors : public testing::TestWithParam<vrf::Type>
@@ -521,11 +522,11 @@ TEST_P(ECTestVectors, TestVectors)
 }
 
 INSTANTIATE_TEST_SUITE_P(TestVectorTypes, RSATestVectors,
-                         testing::Values(vrf::Type::RSA_FDH_VRF_RSA2048_SHA256, vrf::Type::RSA_FDH_VRF_RSA3072_SHA256,
-                                         vrf::Type::RSA_FDH_VRF_RSA4096_SHA384, vrf::Type::RSA_FDH_VRF_RSA4096_SHA512),
+                         testing::Values(vrf::Type::rsa_fdh_vrf_rsa2048_sha256, vrf::Type::rsa_fdh_vrf_rsa3072_sha256,
+                                         vrf::Type::rsa_fdh_vrf_rsa4096_sha384, vrf::Type::rsa_fdh_vrf_rsa4096_sha512),
                          testing::PrintToStringParamName());
 
-INSTANTIATE_TEST_SUITE_P(TestVectorTypes, ECTestVectors, testing::Values(vrf::Type::EC_VRF_P256_SHA256_TAI),
+INSTANTIATE_TEST_SUITE_P(TestVectorTypes, ECTestVectors, testing::Values(vrf::Type::ec_vrf_p256_sha256_tai),
                          testing::PrintToStringParamName());
 
 } // namespace vrf::tests

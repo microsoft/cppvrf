@@ -7,9 +7,8 @@
 namespace vrf
 {
 
-MD_CTX_Guard::MD_CTX_Guard(bool oneshot_only)
+MD_CTX_Guard::MD_CTX_Guard(bool oneshot_only) : mctx_(EVP_MD_CTX_new())
 {
-    mctx_ = EVP_MD_CTX_new();
     if (nullptr != mctx_)
     {
         // Should this context be restricted to one-shot hashing use only?
@@ -20,7 +19,7 @@ MD_CTX_Guard::MD_CTX_Guard(bool oneshot_only)
     }
 }
 
-EC_GROUP_Guard::EC_GROUP_Guard(Curve curve) : ec_group_{}, curve_{Curve::UNDEFINED}
+EC_GROUP_Guard::EC_GROUP_Guard(Curve curve)
 {
     const int nid = curve_to_nid(curve);
     if (NID_undef == nid)
@@ -45,9 +44,16 @@ void EC_GROUP_Guard::free() noexcept
     const void *ec_group_addr = static_cast<const void *>(ec_group_);
     EC_GROUP_free(ec_group_);
     ec_group_ = nullptr;
-    curve_ = Curve::UNDEFINED;
+    curve_ = Curve::undefined;
 
-    GetLogger()->trace("EC_GROUP_Guard freed EC_GROUP (curve {}) at address {:p}.", to_string(curve_), ec_group_addr);
+    try
+    {
+        GetLogger()->trace("EC_GROUP_Guard freed EC_GROUP (curve {}) at address {:p}.", to_string(curve_),
+                           ec_group_addr);
+    }
+    catch (...) // NOLINT(bugprone-empty-catch)
+    {
+    }
 }
 
 EC_GROUP_Guard &EC_GROUP_Guard::operator=(EC_GROUP_Guard &&rhs) noexcept
@@ -61,7 +67,7 @@ EC_GROUP_Guard &EC_GROUP_Guard::operator=(EC_GROUP_Guard &&rhs) noexcept
     return *this;
 }
 
-EC_GROUP_Guard::EC_GROUP_Guard(const EC_GROUP_Guard &source) : ec_group_{nullptr}, curve_{Curve::UNDEFINED}
+EC_GROUP_Guard::EC_GROUP_Guard(const EC_GROUP_Guard &source)
 {
     EC_GROUP *group_copy = EC_GROUP_dup(source.ec_group_);
     if (nullptr == group_copy)
@@ -75,7 +81,7 @@ EC_GROUP_Guard::EC_GROUP_Guard(const EC_GROUP_Guard &source) : ec_group_{nullptr
     GetLogger()->trace("EC_GROUP_Guard copy constructor finished (curve {}).", to_string(curve_));
 }
 
-BIGNUM_Guard::BIGNUM_Guard(bool secure) : bn_{}, owned_{false}
+BIGNUM_Guard::BIGNUM_Guard(bool secure) : owned_{false}
 {
     BIGNUM *bn = nullptr;
     if (secure)
@@ -115,7 +121,13 @@ void BIGNUM_Guard::free() noexcept
     bn_ = nullptr;
     owned_ = true;
 
-    GetLogger()->trace("BIGNUM_Guard freed BIGNUM at address {:p}.", bn_addr);
+    try
+    {
+        GetLogger()->trace("BIGNUM_Guard freed BIGNUM at address {:p}.", bn_addr);
+    }
+    catch (...) // NOLINT(bugprone-empty-catch)
+    {
+    }
 }
 
 bool BIGNUM_Guard::is_secure() const noexcept
@@ -159,7 +171,13 @@ void BN_CTX_Guard::free() noexcept
     bcg_ = nullptr;
     secure_ = false;
 
-    GetLogger()->trace("BN_CTX_Guard freed BN_CTX at address {:p}.", bcg_addr);
+    try
+    {
+        GetLogger()->trace("BN_CTX_Guard freed BN_CTX at address {:p}.", bcg_addr);
+    }
+    catch (...) // NOLINT(bugprone-empty-catch)
+    {
+    }
 }
 
 BN_CTX_Guard &BN_CTX_Guard::operator=(BN_CTX_Guard &&rhs) noexcept
@@ -192,7 +210,7 @@ bool ensure_bcg_set(BN_CTX_Guard &bcg, bool secure)
     return true;
 }
 
-EC_POINT_Guard::EC_POINT_Guard(Curve curve, EC_POINT *ec_pt, BN_CTX_Guard &bcg) : ec_pt_{}, curve_(Curve::UNDEFINED)
+EC_POINT_Guard::EC_POINT_Guard(Curve curve, EC_POINT *ec_pt, BN_CTX_Guard &bcg)
 {
     const EC_GROUP_Guard group{curve};
     if (!group.has_value() || nullptr == ec_pt)
@@ -254,9 +272,15 @@ void EC_POINT_Guard::free() noexcept
     const Curve curve = curve_;
     EC_POINT_clear_free(ec_pt_);
     ec_pt_ = nullptr;
-    curve_ = Curve::UNDEFINED;
+    curve_ = Curve::undefined;
 
-    GetLogger()->trace("EC_POINT_Guard freed EC_POINT (address {:p}) on curve {}.", pt_addr, to_string(curve));
+    try
+    {
+        GetLogger()->trace("EC_POINT_Guard freed EC_POINT (address {:p}) on curve {}.", pt_addr, to_string(curve));
+    }
+    catch (...) // NOLINT(bugprone-empty-catch)
+    {
+    }
 }
 
 EC_POINT_Guard &EC_POINT_Guard::operator=(EC_POINT_Guard &&rhs) noexcept
