@@ -45,15 +45,15 @@ These functionalities are illustrated in the examples below.
 All supported VRF implementations are listed in [vrf/type.h](vrf/type.h).
 They are described by the following enum values:
 
-- `vrf::Type::RSA_FDH_VRF_RSA2048_SHA256`
-- `vrf::Type::RSA_FDH_VRF_RSA3072_SHA256`
-- `vrf::Type::RSA_FDH_VRF_RSA4096_SHA384`
-- `vrf::Type::RSA_FDH_VRF_RSA4096_SHA512`
-- `vrf::Type::RSA_PSS_NOSALT_VRF_RSA2048_SHA256`
-- `vrf::Type::RSA_PSS_NOSALT_VRF_RSA3072_SHA256`
-- `vrf::Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA384`
-- `vrf::Type::RSA_PSS_NOSALT_VRF_RSA4096_SHA512`
-- `vrf::Type::EC_VRF_P256_SHA256_TAI`
+- `vrf::Type::rsa_fdh_vrf_rsa2048_sha256`
+- `vrf::Type::rsa_fdh_vrf_rsa3072_sha256`
+- `vrf::Type::rsa_fdh_vrf_rsa4096_sha384`
+- `vrf::Type::rsa_fdh_vrf_rsa4096_sha512`
+- `vrf::Type::rsa_pss_nosalt_vrf_rsa2048_sha256`
+- `vrf::Type::rsa_pss_nosalt_vrf_rsa3072_sha256`
+- `vrf::Type::rsa_pss_nosalt_vrf_rsa4096_sha384`
+- `vrf::Type::rsa_pss_nosalt_vrf_rsa4096_sha512`
+- `vrf::Type::ec_vrf_p256_sha256_tai`
 
 The following code snippet creates an RSA-FDH VRF with a 2048-bit key and uses SHA-256 as a hash function.
 The `vrf::VRF::Create` function creates a VRF secret key and stores it in memory.
@@ -63,7 +63,7 @@ Failure can be tested by checking that the output is not `nullptr` and the `is_i
 #include <stdexcept>
 #include "vrf/vrf.h"
 
-vrf::Type type = vrf::Type::RSA_FDH_VRF_RSA2048_SHA256;
+vrf::Type type = vrf::Type::rsa_fdh_vrf_rsa2048_sha256;
 std::unique_ptr<vrf::SecretKey> sk = vrf::VRF::Create(type);
 if (!sk || !sk->is_initialized()) {
     throw std::runtime_error("VRF secret key creation failed");
