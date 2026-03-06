@@ -22,7 +22,7 @@ std::unique_ptr<SecretKey> VRF::Create(Type type)
         return std::unique_ptr<SecretKey>{new ec::ECSecretKey{type}};
     }
 
-    GetLogger()->warn("VRF type {} is not supported", to_string(type));
+    GetLogger()->warning("VRF type {} is not supported", to_string(type));
     return nullptr;
 }
 
@@ -48,7 +48,7 @@ std::unique_ptr<Proof> VRF::ProofFromBytes(std::span<const std::byte> data)
         return proof;
     }
 
-    GetLogger()->warn("Failed to deserialize VRF proof.");
+    GetLogger()->warning("Failed to deserialize VRF proof.");
     return nullptr;
 }
 
@@ -74,7 +74,7 @@ std::unique_ptr<PublicKey> VRF::PublicKeyFromBytes(std::span<const std::byte> da
         return pk;
     }
 
-    GetLogger()->warn("Failed to deserialize VRF public key.");
+    GetLogger()->warning("Failed to deserialize VRF public key.");
     return nullptr;
 }
 
@@ -100,7 +100,7 @@ std::unique_ptr<SecretKey> VRF::SecretKeyFromBytes(std::span<const std::byte> da
         return sk;
     }
 
-    GetLogger()->warn("Failed to deserialize VRF secret key.");
+    GetLogger()->warning("Failed to deserialize VRF secret key.");
     return nullptr;
 }
 

@@ -59,7 +59,7 @@ BIGNUM_Guard hex_string_to_bignum(const std::string &hex_str)
     BIGNUM_Guard bn{};
     if (0 == BN_hex2bn(bn.free_and_get_addr(true), hex_str.c_str()))
     {
-        GetLogger()->err("Failed to convert hex string to BIGNUM: {}", hex_str);
+        GetLogger()->error("Failed to convert hex string to BIGNUM: {}", hex_str);
         return {};
     }
 
@@ -74,28 +74,28 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
     BIGNUM_Guard q = hex_string_to_bignum(q_hex);
     if (!p.has_value() || !q.has_value())
     {
-        GetLogger()->err("Failed to create BIGNUMs for RSA parameters.");
+        GetLogger()->error("Failed to create BIGNUMs for RSA parameters.");
         return {};
     }
 
     const rsa::RSAVRFParams params = rsa::get_rsavrf_params(type);
     if (params.algorithm_name.empty())
     {
-        GetLogger()->err("Unsupported VRF type for RSA key generation.");
+        GetLogger()->error("Unsupported VRF type for RSA key generation.");
         return {};
     }
 
     EVP_PKEY_CTX_Guard pctx{EVP_PKEY_CTX_new_from_name(get_libctx(), params.algorithm_name.data(), get_propquery())};
     if (!pctx.has_value())
     {
-        GetLogger()->err("Failed to create EVP_PKEY_CTX for RSA key generation.");
+        GetLogger()->error("Failed to create EVP_PKEY_CTX for RSA key generation.");
         return {};
     }
 
     BN_CTX_Guard bn_ctx{true};
     if (!bn_ctx.has_value())
     {
-        GetLogger()->err("Failed to allocate BN_CTX.");
+        GetLogger()->error("Failed to allocate BN_CTX.");
         return {};
     }
 
@@ -115,19 +115,19 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
         !lcm.has_value() || !tmp.has_value() || !d.has_value() || !dmp1.has_value() || !dmq1.has_value() ||
         !iqmp.has_value())
     {
-        GetLogger()->err("Failed to allocate BIGNUMs for RSA key generation.");
+        GetLogger()->error("Failed to allocate BIGNUMs for RSA key generation.");
         return {};
     }
 
     if (1 != BN_set_word(e_bn.get(), params.e))
     {
-        GetLogger()->err("Failed to set public exponent e.");
+        GetLogger()->error("Failed to set public exponent e.");
         return {};
     }
 
     if (1 != BN_mul(n.get(), p.get(), q.get(), bn_ctx.get()))
     {
-        GetLogger()->err("Failed to compute RSA modulus n = p*q.");
+        GetLogger()->error("Failed to compute RSA modulus n = p*q.");
         return {};
     }
 
@@ -135,34 +135,34 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
     if (nullptr == BN_copy(p_minus_1.get(), p.get()) || 1 != BN_sub_word(p_minus_1.get(), 1) ||
         nullptr == BN_copy(q_minus_1.get(), q.get()) || 1 != BN_sub_word(q_minus_1.get(), 1))
     {
-        GetLogger()->err("Failed to compute p-1 and q-1.");
+        GetLogger()->error("Failed to compute p-1 and q-1.");
         return {};
     }
 
     if (1 != BN_gcd(gcd.get(), p_minus_1.get(), q_minus_1.get(), bn_ctx.get()))
     {
-        GetLogger()->err("Failed to compute gcd(p-1, q-1).");
+        GetLogger()->error("Failed to compute gcd(p-1, q-1).");
         return {};
     }
 
     // tmp = (p-1) / gcd
     if (1 != BN_div(tmp.get(), nullptr, p_minus_1.get(), gcd.get(), bn_ctx.get()))
     {
-        GetLogger()->err("Failed to divide (p-1) by gcd for lcm.");
+        GetLogger()->error("Failed to divide (p-1) by gcd for lcm.");
         return {};
     }
 
     // lcm = tmp * (q-1)
     if (1 != BN_mul(lcm.get(), tmp.get(), q_minus_1.get(), bn_ctx.get()))
     {
-        GetLogger()->err("Failed to compute lcm(p-1, q-1).");
+        GetLogger()->error("Failed to compute lcm(p-1, q-1).");
         return {};
     }
 
     // d = e^{-1} mod lcm
     if (nullptr == BN_mod_inverse(d.get(), e_bn.get(), lcm.get(), bn_ctx.get()))
     {
-        GetLogger()->err("Public exponent e is not invertible modulo λ(n). Bad RSA parameters?");
+        GetLogger()->error("Public exponent e is not invertible modulo λ(n). Bad RSA parameters?");
         return {};
     }
 
@@ -170,14 +170,14 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
     if (1 != BN_mod(dmp1.get(), d.get(), p_minus_1.get(), bn_ctx.get()) ||
         1 != BN_mod(dmq1.get(), d.get(), q_minus_1.get(), bn_ctx.get()))
     {
-        GetLogger()->err("Failed to compute CRT exponents dmp1/dmq1.");
+        GetLogger()->error("Failed to compute CRT exponents dmp1/dmq1.");
         return {};
     }
 
     // iqmp = q^{-1} mod p
     if (nullptr == BN_mod_inverse(iqmp.get(), q.get(), p.get(), bn_ctx.get()))
     {
-        GetLogger()->err("Failed to compute iqmp = q^{{-1}} mod p.");
+        GetLogger()->error("Failed to compute iqmp = q^{{-1}} mod p.");
         return {};
     }
 
@@ -189,7 +189,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
             1 != BN_gcd(gq.get(), e_bn.get(), q_minus_1.get(), bn_ctx.get()) || !BN_is_one(ge.get()) ||
             !BN_is_one(gq.get()))
         {
-            GetLogger()->err("Public exponent e is not coprime with p-1 and/or q-1.");
+            GetLogger()->error("Public exponent e is not coprime with p-1 and/or q-1.");
             return {};
         }
     }
@@ -197,7 +197,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
     OSSL_PARAM_BLD *bld = OSSL_PARAM_BLD_new();
     if (nullptr == bld)
     {
-        GetLogger()->err("OSSL_PARAM_BLD_new failed.");
+        GetLogger()->error("OSSL_PARAM_BLD_new failed.");
         return {};
     }
 
@@ -213,7 +213,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
     if (!ok)
     {
         OSSL_PARAM_BLD_free(bld);
-        GetLogger()->err("Failed to push RSA parameters into OSSL_PARAM_BLD.");
+        GetLogger()->error("Failed to push RSA parameters into OSSL_PARAM_BLD.");
         return {};
     }
 
@@ -221,7 +221,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
     if (nullptr == paramlist)
     {
         OSSL_PARAM_BLD_free(bld);
-        GetLogger()->err("OSSL_PARAM_BLD_to_param failed.");
+        GetLogger()->error("OSSL_PARAM_BLD_to_param failed.");
         return {};
     }
 
@@ -231,7 +231,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
     {
         OSSL_PARAM_free(paramlist);
         OSSL_PARAM_BLD_free(bld);
-        GetLogger()->err("EVP_PKEY_fromdata_init failed.");
+        GetLogger()->error("EVP_PKEY_fromdata_init failed.");
         return {};
     }
 
@@ -239,7 +239,7 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
     {
         OSSL_PARAM_free(paramlist);
         OSSL_PARAM_BLD_free(bld);
-        GetLogger()->err("EVP_PKEY_fromdata failed to create RSA EVP_PKEY.");
+        GetLogger()->error("EVP_PKEY_fromdata failed to create RSA EVP_PKEY.");
         return {};
     }
 
@@ -251,13 +251,13 @@ EVP_PKEY_Guard make_rsa_secret_key(Type type, const std::string &p_hex, const st
         EVP_PKEY_CTX_Guard ck{EVP_PKEY_CTX_new_from_pkey(get_libctx(), pkey.get(), get_propquery())};
         if (!ck.has_value())
         {
-            GetLogger()->err("Failed to create EVP_PKEY_CTX for checking constructed RSA key.");
+            GetLogger()->error("Failed to create EVP_PKEY_CTX for checking constructed RSA key.");
             return {};
         }
 
         if (1 != EVP_PKEY_check(ck.get()))
         {
-            GetLogger()->err("Constructed RSA EVP_PKEY failed EVP_PKEY_check.");
+            GetLogger()->error("Constructed RSA EVP_PKEY failed EVP_PKEY_check.");
             return {};
         }
     }
@@ -270,21 +270,21 @@ std::unique_ptr<SecretKey> make_rsa_vrf_secret_key(Type type, const std::string 
     EVP_PKEY_Guard pkey = make_rsa_secret_key(type, p_hex, q_hex);
     if (!pkey.has_value())
     {
-        GetLogger()->err("Failed to create RSA EVP_PKEY for VRF secret key.");
+        GetLogger()->error("Failed to create RSA EVP_PKEY for VRF secret key.");
         return nullptr;
     }
 
     rsa::RSA_SK_Guard sk_guard{type, std::move(pkey)};
     if (!sk_guard.has_value())
     {
-        GetLogger()->err("Failed to create RSA_SK_Guard for VRF secret key.");
+        GetLogger()->error("Failed to create RSA_SK_Guard for VRF secret key.");
         return nullptr;
     }
 
     std::unique_ptr<SecretKey> sk = std::make_unique<rsa::RSASecretKey>(std::move(sk_guard));
     if (!sk->is_initialized())
     {
-        GetLogger()->err("Failed to create RSA VRF secret key from EVP_PKEY.");
+        GetLogger()->error("Failed to create RSA VRF secret key from EVP_PKEY.");
         return nullptr;
     }
 
@@ -296,14 +296,14 @@ std::unique_ptr<SecretKey> make_ec_vrf_secret_key(Type type, const std::string &
     ec::ScalarType sk_scalar{hex_string_to_bignum(sk_hex)};
     if (!sk_scalar.has_value())
     {
-        GetLogger()->err("Failed to convert hex string to EC scalar for VRF secret key.");
+        GetLogger()->error("Failed to convert hex string to EC scalar for VRF secret key.");
         return nullptr;
     }
 
     std::unique_ptr<SecretKey> sk = std::make_unique<ec::ECSecretKey>(type, std::move(sk_scalar));
     if (!sk->is_initialized())
     {
-        GetLogger()->err("Failed to create EC VRF secret key from scalar.");
+        GetLogger()->error("Failed to create EC VRF secret key from scalar.");
         return nullptr;
     }
 
@@ -314,7 +314,7 @@ std::vector<std::byte> parse_hex_bytes(std::string_view s)
 {
     if (s.length() % 2 != 0)
     {
-        GetLogger()->err("Hex string has odd length: {}", s.size());
+        GetLogger()->error("Hex string has odd length: {}", s.size());
         return {};
     }
 
@@ -343,7 +343,7 @@ std::vector<std::byte> parse_hex_bytes(std::string_view s)
     }
     if (hi != -1)
     {
-        GetLogger()->err("Hex string has odd number of hex digits after filtering: {}", s.size());
+        GetLogger()->error("Hex string has odd number of hex digits after filtering: {}", s.size());
         return {};
     }
 
@@ -363,7 +363,7 @@ RSA_VRF_TestVectorParams get_rsa_vrf_test_vector_params(Type type)
     case rsa_fdh_vrf_rsa4096_sha512:
         return RSA_FDH_4096_SHA512_PARAMS;
     default:
-        GetLogger()->err("No test vector parameters defined for VRF type {}.", to_string(type));
+        GetLogger()->error("No test vector parameters defined for VRF type {}.", to_string(type));
         return {};
     }
 }
@@ -375,7 +375,7 @@ EC_VRF_TestVectorParams get_ec_vrf_test_vector_params(Type type)
     case ec_vrf_p256_sha256_tai:
         return EC_VRF_P256_SHA256_TAI_PARAMS;
     default:
-        GetLogger()->err("No test vector parameters defined for VRF type {}.", to_string(type));
+        GetLogger()->error("No test vector parameters defined for VRF type {}.", to_string(type));
         return {};
     }
 }

@@ -36,7 +36,7 @@ std::vector<std::byte> generate_mgf1_salt(const EVP_PKEY_Guard &pkey)
     BIGNUM_Guard n{};
     if (1 != EVP_PKEY_get_bn_param(pkey.get(), OSSL_PKEY_PARAM_RSA_N, n.free_and_get_addr(true)))
     {
-        GetLogger()->warn("Failed to retrieve RSA modulus from EVP_PKEY in generate_mgf1_salt.");
+        GetLogger()->warning("Failed to retrieve RSA modulus from EVP_PKEY in generate_mgf1_salt.");
         return {};
     }
 
@@ -51,7 +51,7 @@ std::vector<std::byte> generate_mgf1_salt(const EVP_PKEY_Guard &pkey)
     // Next, convert bn_n to a byte array with I2OSP and append to the salt.
     if (n_len != int_to_bytes_big_endian(n, std::span<std::byte>(salt.data() + 4, n_len)))
     {
-        GetLogger()->err("Failed to convert RSA modulus to byte array in generate_mgf1_salt.");
+        GetLogger()->error("Failed to convert RSA modulus to byte array in generate_mgf1_salt.");
         return {};
     }
 
@@ -167,19 +167,19 @@ EVP_PKEY_Guard RSA_SK_Guard::GenerateRSAKey(Type type)
     EVP_PKEY_CTX_Guard pctx{EVP_PKEY_CTX_new_from_name(get_libctx(), params.algorithm_name.data(), get_propquery())};
     if (!pctx.has_value())
     {
-        GetLogger()->err("Failed to create EVP_PKEY_CTX in GenerateRSAKey.");
+        GetLogger()->error("Failed to create EVP_PKEY_CTX in GenerateRSAKey.");
         return {};
     }
 
     if (0 >= EVP_PKEY_keygen_init(pctx.get()))
     {
-        GetLogger()->err("Failed to initialize RSA key generation; EVP_PKEY_keygen_init failed in GenerateRSAKey.");
+        GetLogger()->error("Failed to initialize RSA key generation; EVP_PKEY_keygen_init failed in GenerateRSAKey.");
         return {};
     }
 
     if (!set_rsa_keygen_params(pctx, type))
     {
-        GetLogger()->err(
+        GetLogger()->error(
             "Failed to set RSA key generation parameters; set_rsa_keygen_params failed  in GenerateRSAKey.");
         return {};
     }
@@ -187,7 +187,7 @@ EVP_PKEY_Guard RSA_SK_Guard::GenerateRSAKey(Type type)
     EVP_PKEY_Guard pkey{};
     if (1 != EVP_PKEY_generate(pctx.get(), pkey.free_and_get_addr()))
     {
-        GetLogger()->err("Failed to generate RSA key pair; EVP_PKEY_generate failed in GenerateRSAKey.");
+        GetLogger()->error("Failed to generate RSA key pair; EVP_PKEY_generate failed in GenerateRSAKey.");
         return {};
     }
 

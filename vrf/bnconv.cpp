@@ -78,7 +78,7 @@ std::size_t int_to_bytes_core(BN_bn2binpad_func_t func, const BIGNUM_Guard &bn, 
     if (static_cast<int>(out.size()) !=
         func(bn.get(), reinterpret_cast<unsigned char *>(out.data()), static_cast<int>(out.size())))
     {
-        GetLogger()->err(
+        GetLogger()->error(
             "Failed to convert BIGNUM (address {:p}) to bytes in int_to_bytes_core (converter address {:p}).",
             static_cast<const void *>(bn.get()), reinterpret_cast<const void *>(func));
         return 0;

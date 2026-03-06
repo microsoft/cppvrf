@@ -38,7 +38,7 @@ EVP_PKEY *decode_public_key_from_der_spki(const char *algorithm_name, std::span<
                                                            EVP_PKEY_PUBLIC_KEY, get_libctx(), get_propquery());
     if (nullptr == dctx)
     {
-        GetLogger()->err("Failed to create OSSL_DECODER_CTX for loading public key.");
+        GetLogger()->error("Failed to create OSSL_DECODER_CTX for loading public key.");
         return nullptr;
     }
 
@@ -71,7 +71,7 @@ std::vector<std::byte> encode_public_key_to_der_spki_with_type(Type type, const 
         OSSL_ENCODER_CTX_new_for_pkey(pkey, EVP_PKEY_PUBLIC_KEY, "DER", "SubjectPublicKeyInfo", get_propquery());
     if (nullptr == ectx)
     {
-        GetLogger()->err("Failed to create OSSL_ENCODER_CTX for saving public key.");
+        GetLogger()->error("Failed to create OSSL_ENCODER_CTX for saving public key.");
         return {};
     }
 
@@ -79,7 +79,7 @@ std::vector<std::byte> encode_public_key_to_der_spki_with_type(Type type, const 
     std::size_t der_data_len = 0;
     if (1 != OSSL_ENCODER_to_data(ectx, &der_data, &der_data_len))
     {
-        GetLogger()->err("Failed to encode public key to DER SPKI using OSSL_ENCODER_to_data.");
+        GetLogger()->error("Failed to encode public key to DER SPKI using OSSL_ENCODER_to_data.");
         OSSL_ENCODER_CTX_free(ectx);
         return {};
     }
@@ -113,7 +113,7 @@ EVP_PKEY *decode_secret_key_from_der_pkcs8(const char *algorithm_name, std::span
                                                            EVP_PKEY_KEYPAIR, get_libctx(), get_propquery());
     if (nullptr == dctx)
     {
-        GetLogger()->err("Failed to create OSSL_DECODER_CTX for loading secret key.");
+        GetLogger()->error("Failed to create OSSL_DECODER_CTX for loading secret key.");
         return nullptr;
     }
 
@@ -146,7 +146,7 @@ SecureBuf encode_secret_key_to_der_pkcs8_with_type(vrf::Type type, const EVP_PKE
         OSSL_ENCODER_CTX_new_for_pkey(pkey, EVP_PKEY_KEYPAIR, "DER", "PrivateKeyInfo", get_propquery());
     if (nullptr == ectx)
     {
-        GetLogger()->err("Failed to create OSSL_ENCODER_CTX for saving secret key.");
+        GetLogger()->error("Failed to create OSSL_ENCODER_CTX for saving secret key.");
         return {};
     }
 
@@ -154,7 +154,7 @@ SecureBuf encode_secret_key_to_der_pkcs8_with_type(vrf::Type type, const EVP_PKE
     std::size_t der_data_len = 0;
     if (1 != OSSL_ENCODER_to_data(ectx, &der_data, &der_data_len))
     {
-        GetLogger()->err("Failed to encode to DER PKCS#8 using OSSL_ENCODER_to_data.");
+        GetLogger()->error("Failed to encode to DER PKCS#8 using OSSL_ENCODER_to_data.");
         OSSL_ENCODER_CTX_free(ectx);
         return {};
     }
@@ -187,8 +187,8 @@ EVP_PKEY *evp_pkey_upref(EVP_PKEY *pkey)
 
     if (1 != EVP_PKEY_up_ref(pkey))
     {
-        GetLogger()->err("Failed to increment reference count for EVP_PKEY (address {:p}).",
-                         static_cast<const void *>(pkey));
+        GetLogger()->error("Failed to increment reference count for EVP_PKEY (address {:p}).",
+                           static_cast<const void *>(pkey));
         return nullptr;
     }
 

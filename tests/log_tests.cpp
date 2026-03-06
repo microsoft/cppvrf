@@ -61,8 +61,8 @@ TEST(LogTests, BasicLogging)
 
     // Log messages at different levels.
     GetLogger()->info("This is an info message.");
-    GetLogger()->warn("This is a warning message.");
-    GetLogger()->err("This is an error message.");
+    GetLogger()->warning("This is a warning message.");
+    GetLogger()->error("This is an error message.");
     GetLogger()->debug("This debug message is not captured.");
 
     // Verify that the captured logs match expected output.
@@ -116,8 +116,8 @@ TEST(LogTests, LogLevel)
     GetLogger()->info("Info message won't be captured.");
     ASSERT_EQ(captured_logs.size(), 0);
 
-    GetLogger()->warn("Warning message will be captured.");
-    GetLogger()->err("Error message will be captured.");
+    GetLogger()->warning("Warning message will be captured.");
+    GetLogger()->error("Error message will be captured.");
     ASSERT_EQ(captured_logs.size(), 2);
 
     // Clean up by closing the logger and restore the default.

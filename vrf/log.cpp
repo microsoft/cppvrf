@@ -3,16 +3,24 @@
 
 #include "vrf/log.h"
 
+#include <cstddef>
+#include <shared_mutex>
+#include <string>
+
 namespace vrf
 {
 
-std::shared_ptr<Logger> GetOrSetLogger(std::shared_ptr<Logger> new_logger = nullptr)
+std::shared_ptr<Logger> GetOrSetLogger(std::shared_ptr<Logger> new_logger)
 {
+    static std::shared_mutex mtx;
     static std::shared_ptr<Logger> logger = NewDefaultLogger();
     if (nullptr != new_logger)
     {
+        std::unique_lock lock{mtx};
         logger = std::move(new_logger);
+        return logger;
     }
+    std::shared_lock lock{mtx};
     return logger;
 }
 

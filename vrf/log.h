@@ -177,7 +177,7 @@ class Logger
      * @param[in] fmt_str The format string.
      * @param[in] args The format arguments.
      */
-    template <typename... Args> void warn(std::format_string<Args...> fmt_str, Args &&...args) const
+    template <typename... Args> void warning(std::format_string<Args...> fmt_str, Args &&...args) const
     {
         log(LogLevel::warning, fmt_str, std::forward<Args>(args)...);
     }
@@ -187,7 +187,7 @@ class Logger
      * @param[in] fmt_str The format string.
      * @param[in] args The format arguments.
      */
-    template <typename... Args> void err(std::format_string<Args...> fmt_str, Args &&...args) const
+    template <typename... Args> void error(std::format_string<Args...> fmt_str, Args &&...args) const
     {
         log(LogLevel::error, fmt_str, std::forward<Args>(args)...);
     }
@@ -228,9 +228,10 @@ std::shared_ptr<Logger> NewDefaultLogger();
  * @brief Gets or replaces the global logger.
  * @param[in] new_logger If non-null, replaces the current global logger. If null, the current
  *   global logger is returned without replacing it.
- * @return The new global logger.
+ * @return The current global logger (after any replacement).
+ * @note This function is thread-safe for both reading and writing.
  */
-std::shared_ptr<Logger> GetOrSetLogger(std::shared_ptr<Logger> new_logger);
+std::shared_ptr<Logger> GetOrSetLogger(std::shared_ptr<Logger> new_logger = nullptr);
 
 /**
  * @brief Gets the current global logger.
