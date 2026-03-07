@@ -1015,7 +1015,7 @@ void RSAPublicKey::from_bytes(std::span<const std::byte> data)
 }
 
 std::pair<bool, std::vector<std::byte>> RSAPublicKey::verify_vrf_proof(std::span<const std::byte> in,
-                                                                       const std::unique_ptr<Proof> &proof)
+                                                                       const Proof &proof)
 {
     if (!is_initialized())
     {
@@ -1024,7 +1024,7 @@ std::pair<bool, std::vector<std::byte>> RSAPublicKey::verify_vrf_proof(std::span
     }
 
     // Downcast the proof type to RSAProof.
-    const RSAProof *rsa_proof = dynamic_cast<const RSAProof *>(proof.get());
+    const RSAProof *rsa_proof = dynamic_cast<const RSAProof *>(&proof);
     if (nullptr == rsa_proof)
     {
         GetLogger()->warning("RSAPublicKey::verify_vrf_proof called with proof that is not of type RSAProof.");

@@ -263,7 +263,7 @@ class PublicKey : public VRFObject<PublicKey>, public Clonable<PublicKey>, publi
      */
     [[nodiscard]]
     virtual std::pair<bool, std::vector<std::byte>> verify_vrf_proof(std::span<const std::byte> in,
-                                                                     const std::unique_ptr<Proof> &proof) = 0;
+                                                                     const Proof &proof) = 0;
 
     /**
      * Verifies the given VRF proof against the provided input data using this public key.
@@ -275,8 +275,7 @@ class PublicKey : public VRFObject<PublicKey>, public Clonable<PublicKey>, publi
     template <ByteLike T, std::size_t N = std::dynamic_extent>
         requires(!std::same_as<std::remove_cv_t<T>, std::byte>)
     [[nodiscard]]
-    std::pair<bool, std::vector<std::byte>> verify_vrf_proof(std::span<const T, N> in,
-                                                             const std::unique_ptr<Proof> &proof)
+    std::pair<bool, std::vector<std::byte>> verify_vrf_proof(std::span<const T, N> in, const Proof &proof)
     {
         return verify_vrf_proof(std::as_bytes(in), proof);
     }
@@ -290,7 +289,7 @@ class PublicKey : public VRFObject<PublicKey>, public Clonable<PublicKey>, publi
      */
     template <ByteRange R>
     [[nodiscard]]
-    std::pair<bool, std::vector<std::byte>> verify_vrf_proof(R &&in, const std::unique_ptr<Proof> &proof)
+    std::pair<bool, std::vector<std::byte>> verify_vrf_proof(R &&in, const Proof &proof)
     {
         return verify_vrf_proof(byte_range_to_span(in), proof);
     }

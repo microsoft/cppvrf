@@ -980,8 +980,7 @@ ECPublicKey::ECPublicKey(Type type, std::span<const std::byte> der_spki) : Publi
                        to_string(type));
 }
 
-std::pair<bool, std::vector<std::byte>> ECPublicKey::verify_vrf_proof(std::span<const std::byte> in,
-                                                                      const std::unique_ptr<Proof> &proof)
+std::pair<bool, std::vector<std::byte>> ECPublicKey::verify_vrf_proof(std::span<const std::byte> in, const Proof &proof)
 {
     if (!is_initialized())
     {
@@ -990,7 +989,7 @@ std::pair<bool, std::vector<std::byte>> ECPublicKey::verify_vrf_proof(std::span<
     }
 
     // Downcast the proof type to ECProof.
-    const ECProof *ec_proof = dynamic_cast<const ECProof *>(proof.get());
+    const ECProof *ec_proof = dynamic_cast<const ECProof *>(&proof);
     if (nullptr == ec_proof)
     {
         GetLogger()->warning("ECPublicKey::verify_vrf_proof called with proof that is not of type ECProof.");

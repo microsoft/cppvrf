@@ -123,13 +123,13 @@ if (!proof || !proof->is_initialized()) {
 }
 
 // Verify the proof with the public key.
-std::pair<bool, std::vector<std::byte>> res = pk->verify_vrf_proof(data, proof);
+std::pair<bool, std::vector<std::byte>> res = pk->verify_vrf_proof(data, *proof);
 if (!res.first) {
     throw std::runtime_error("Proof verification failed");
 }
 
 // If res.first is true, the VRF value is in the second value of the pair.
-std::vector<std::byte> hash1 = res.first;
+std::vector<std::byte> hash1 = res.second;
 
 // The VRF value can also be obtained directly from the proof object as follows.
 // However, this does *not* verify the proof!

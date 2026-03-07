@@ -56,7 +56,7 @@ void check_test_vector(const std::unique_ptr<SecretKey> &vrf_sk, const std::vect
 
     std::unique_ptr<PublicKey> vrf_pk = vrf_sk->get_public_key();
     ASSERT_NE(nullptr, vrf_pk.get());
-    auto [success, value] = vrf_pk->verify_vrf_proof(data, proof);
+    auto [success, value] = vrf_pk->verify_vrf_proof(data, *proof);
     ASSERT_TRUE(success);
     ASSERT_EQ(expected_value, value);
 }
@@ -108,7 +108,7 @@ TEST_P(VRFTest, CreateVerifyProof)
         auto proof = sk->get_vrf_proof(data);
         ASSERT_NE(proof, nullptr);
         ASSERT_TRUE(proof->is_initialized());
-        auto [success, hash] = pk->verify_vrf_proof(data, proof);
+        auto [success, hash] = pk->verify_vrf_proof(data, *proof);
         ASSERT_TRUE(success);
         ASSERT_FALSE(hash.empty());
     };
@@ -140,7 +140,7 @@ TEST_P(VRFTest, ProofToBytesFromBytes)
     ASSERT_TRUE(proof_from_bytes->is_initialized());
     ASSERT_EQ(proof_from_bytes->get_type(), type);
 
-    auto [success, hash] = pk->verify_vrf_proof(data, proof_from_bytes);
+    auto [success, hash] = pk->verify_vrf_proof(data, *proof_from_bytes);
     ASSERT_TRUE(success);
     ASSERT_FALSE(hash.empty());
 }
@@ -161,7 +161,7 @@ TEST_P(VRFTest, PublicKeyEncodeDecode)
     std::vector<std::byte> data = random_bytes(32);
     auto proof = sk->get_vrf_proof(data);
 
-    auto [success, hash] = pk_from_string->verify_vrf_proof(data, proof);
+    auto [success, hash] = pk_from_string->verify_vrf_proof(data, *proof);
     ASSERT_TRUE(success);
     ASSERT_FALSE(hash.empty());
 }
@@ -180,8 +180,8 @@ TEST_P(VRFTest, ValueIsDeterministic)
     ASSERT_NE(proof2, nullptr);
     ASSERT_TRUE(proof2->is_initialized());
 
-    auto [success1, hash1] = pk->verify_vrf_proof(data, proof1);
-    auto [success2, hash2] = pk->verify_vrf_proof(data, proof2);
+    auto [success1, hash1] = pk->verify_vrf_proof(data, *proof1);
+    auto [success2, hash2] = pk->verify_vrf_proof(data, *proof2);
     ASSERT_TRUE(success1);
     ASSERT_TRUE(success2);
     ASSERT_FALSE(hash1.empty());
@@ -194,7 +194,7 @@ TEST_P(VRFTest, ValueIsDeterministic)
         std::vector<std::byte> different_data = data;
         different_data[0] ^= std::byte{0x01};
         auto proof3 = sk->get_vrf_proof(different_data);
-        auto [success3, hash3] = pk->verify_vrf_proof(different_data, proof3);
+        auto [success3, hash3] = pk->verify_vrf_proof(different_data, *proof3);
         ASSERT_TRUE(success3);
         ASSERT_FALSE(hash3.empty());
         ASSERT_NE(proof1->to_bytes(), proof3->to_bytes());
@@ -204,7 +204,7 @@ TEST_P(VRFTest, ValueIsDeterministic)
         std::vector<std::byte> different_data = data;
         different_data[different_data.size() - 1] ^= std::byte{0x01};
         auto proof3 = sk->get_vrf_proof(different_data);
-        auto [success3, hash3] = pk->verify_vrf_proof(different_data, proof3);
+        auto [success3, hash3] = pk->verify_vrf_proof(different_data, *proof3);
         ASSERT_TRUE(success3);
         ASSERT_FALSE(hash3.empty());
         ASSERT_NE(proof1->to_bytes(), proof3->to_bytes());
@@ -217,7 +217,7 @@ TEST_P(VRFTest, ValueIsDeterministic)
             different_data[i] = ~data[i];
         }
         auto proof3 = sk->get_vrf_proof(different_data);
-        auto [success3, hash3] = pk->verify_vrf_proof(different_data, proof3);
+        auto [success3, hash3] = pk->verify_vrf_proof(different_data, *proof3);
         ASSERT_TRUE(success3);
         ASSERT_FALSE(hash3.empty());
         ASSERT_NE(proof1->to_bytes(), proof3->to_bytes());
@@ -241,7 +241,7 @@ TEST_P(VRFTest, InvalidProof)
         auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
-        auto [success, hash] = pk->verify_vrf_proof(data, invalid_proof);
+        auto [success, hash] = pk->verify_vrf_proof(data, *invalid_proof);
         ASSERT_FALSE(success);
         ASSERT_TRUE(hash.empty());
     }
@@ -253,7 +253,7 @@ TEST_P(VRFTest, InvalidProof)
         auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
-        auto [success, hash] = pk->verify_vrf_proof(data, invalid_proof);
+        auto [success, hash] = pk->verify_vrf_proof(data, *invalid_proof);
         ASSERT_FALSE(success);
         ASSERT_TRUE(hash.empty());
     }
@@ -265,7 +265,7 @@ TEST_P(VRFTest, InvalidProof)
         auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
-        auto [success, hash] = pk->verify_vrf_proof(data, invalid_proof);
+        auto [success, hash] = pk->verify_vrf_proof(data, *invalid_proof);
         ASSERT_FALSE(success);
         ASSERT_TRUE(hash.empty());
     }
@@ -284,7 +284,7 @@ TEST_P(VRFTest, InvalidProof)
         auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
-        auto [success, hash] = pk->verify_vrf_proof(data, invalid_proof);
+        auto [success, hash] = pk->verify_vrf_proof(data, *invalid_proof);
         ASSERT_FALSE(success);
         ASSERT_TRUE(hash.empty());
     }
@@ -296,7 +296,7 @@ TEST_P(VRFTest, InvalidProof)
         auto invalid_proof = vrf::VRF::ProofFromBytes(invalid_proof_data);
         ASSERT_NE(invalid_proof, nullptr);
         ASSERT_TRUE(invalid_proof->is_initialized());
-        auto [success, hash] = pk->verify_vrf_proof(data, invalid_proof);
+        auto [success, hash] = pk->verify_vrf_proof(data, *invalid_proof);
         ASSERT_FALSE(success);
         ASSERT_TRUE(hash.empty());
     }
@@ -317,7 +317,7 @@ TEST_P(VRFTest, InvalidPublicKey)
         der_spki[1] ^= std::byte{1};
         auto invalid_pk = vrf::VRF::PublicKeyFromBytes(der_spki);
         ASSERT_TRUE(invalid_pk == nullptr || !invalid_pk->is_initialized() ||
-                    !invalid_pk->verify_vrf_proof(data, proof).first);
+                    !invalid_pk->verify_vrf_proof(data, *proof).first);
     }
 
     // Create an invalid public key by modifying the DER SPKI: modification in the middle.
@@ -327,7 +327,7 @@ TEST_P(VRFTest, InvalidPublicKey)
         der_spki[der_spki.size() / 2] ^= std::byte{1};
         auto invalid_pk = vrf::VRF::PublicKeyFromBytes(der_spki);
         ASSERT_TRUE(invalid_pk == nullptr || !invalid_pk->is_initialized() ||
-                    !invalid_pk->verify_vrf_proof(data, proof).first);
+                    !invalid_pk->verify_vrf_proof(data, *proof).first);
     }
 
     // Create an invalid public key by modifying the DER SPKI: modification in the end.
@@ -337,7 +337,7 @@ TEST_P(VRFTest, InvalidPublicKey)
         der_spki[der_spki.size() - 1] ^= std::byte{1};
         auto invalid_pk = vrf::VRF::PublicKeyFromBytes(der_spki);
         ASSERT_TRUE(invalid_pk == nullptr || !invalid_pk->is_initialized() ||
-                    !invalid_pk->verify_vrf_proof(data, proof).first);
+                    !invalid_pk->verify_vrf_proof(data, *proof).first);
     }
 }
 
@@ -353,7 +353,7 @@ TEST(VRFTest, InputFlexibility)
         auto proof = sk->get_vrf_proof(data);
         ASSERT_NE(proof, nullptr);
         ASSERT_TRUE(proof->is_initialized());
-        auto [success, hash] = pk->verify_vrf_proof(data, proof);
+        auto [success, hash] = pk->verify_vrf_proof(data, *proof);
         ASSERT_TRUE(success);
         ASSERT_FALSE(hash.empty());
     }
@@ -364,7 +364,7 @@ TEST(VRFTest, InputFlexibility)
         auto proof = sk->get_vrf_proof(data);
         ASSERT_NE(proof, nullptr);
         ASSERT_TRUE(proof->is_initialized());
-        auto [success, hash] = pk->verify_vrf_proof(data, proof);
+        auto [success, hash] = pk->verify_vrf_proof(data, *proof);
         ASSERT_TRUE(success);
         ASSERT_FALSE(hash.empty());
     }
@@ -375,7 +375,7 @@ TEST(VRFTest, InputFlexibility)
         auto proof = sk->get_vrf_proof(data);
         ASSERT_NE(proof, nullptr);
         ASSERT_TRUE(proof->is_initialized());
-        auto [success, hash] = pk->verify_vrf_proof(data, proof);
+        auto [success, hash] = pk->verify_vrf_proof(data, *proof);
         ASSERT_TRUE(success);
         ASSERT_FALSE(hash.empty());
     }
@@ -385,7 +385,7 @@ TEST(VRFTest, InputFlexibility)
         auto proof = sk->get_vrf_proof(std::string("hello world"));
         ASSERT_NE(proof, nullptr);
         ASSERT_TRUE(proof->is_initialized());
-        auto [success, hash] = pk->verify_vrf_proof(std::string("hello world"), proof);
+        auto [success, hash] = pk->verify_vrf_proof(std::string("hello world"), *proof);
         ASSERT_TRUE(success);
         ASSERT_FALSE(hash.empty());
     }
@@ -418,7 +418,7 @@ TEST_P(VRFTest, SecretKeyRoundTrip)
 
     auto pk = sk_roundtrip->get_public_key();
     ASSERT_NE(pk, nullptr);
-    auto [success, hash] = pk->verify_vrf_proof(data, proof);
+    auto [success, hash] = pk->verify_vrf_proof(data, *proof);
     ASSERT_TRUE(success);
     ASSERT_FALSE(hash.empty());
 }
@@ -453,10 +453,10 @@ TEST_P(VRFTest, SKSerializationVerifyCross)
     auto pk2 = sk2->get_public_key();
     ASSERT_NE(pk2, nullptr);
 
-    auto proof_result1 = pk1->verify_vrf_proof(data1, proof1);
-    auto proof_result2 = pk1->verify_vrf_proof(data2, proof2);
-    auto proof_result3 = pk2->verify_vrf_proof(data1, proof1);
-    auto proof_result4 = pk2->verify_vrf_proof(data2, proof2);
+    auto proof_result1 = pk1->verify_vrf_proof(data1, *proof1);
+    auto proof_result2 = pk1->verify_vrf_proof(data2, *proof2);
+    auto proof_result3 = pk2->verify_vrf_proof(data1, *proof1);
+    auto proof_result4 = pk2->verify_vrf_proof(data2, *proof2);
 
     ASSERT_TRUE(proof_result1.first);
     ASSERT_TRUE(proof_result2.first);

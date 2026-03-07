@@ -131,7 +131,7 @@ class RSAPublicKey final : public PublicKey
 
     [[nodiscard]]
     std::pair<bool, std::vector<std::byte>> verify_vrf_proof(std::span<const std::byte> in,
-                                                             const std::unique_ptr<Proof> &proof) override;
+                                                             const Proof &proof) override;
 
     [[nodiscard]]
     bool is_initialized() const noexcept override

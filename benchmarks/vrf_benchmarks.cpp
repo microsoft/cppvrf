@@ -64,7 +64,7 @@ void BM_VRF_VerifyProof(benchmark::State &state)
     auto proof = sk->get_vrf_proof(data);
     for (auto _ : state)
     {
-        auto [success, hash] = pk->verify_vrf_proof(data, proof);
+        auto [success, hash] = pk->verify_vrf_proof(data, *proof);
         benchmark::DoNotOptimize(success);
         benchmark::DoNotOptimize(hash);
     }
