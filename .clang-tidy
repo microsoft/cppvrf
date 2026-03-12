@@ -30,7 +30,6 @@ Checks: >
   -misc-const-correctness,
   -performance-enum-size,
   -misc-include-cleaner,
-  -misc-use-anonymous-namespace,
   -misc-multiple-inheritance,
   -misc-use-internal-linkage,
   -modernize-use-auto,
