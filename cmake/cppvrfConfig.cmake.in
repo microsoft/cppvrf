@@ -36,5 +36,5 @@ endif()
 
 # Print information about available targets and directories.
 if(CPPVRF_FOUND)
-    message(STATUS "Found cppvrf version \"${cppvrf_VERSION}\".")
+    message(STATUS "Found cppvrf version \"${PACKAGE_VERSION}\".")
 endif()
