@@ -6,10 +6,20 @@
 # - CPPVRF_INCLUDES_DIR : Directory where the cppvrf include files are.
 # - CPPVRF_CONFIG_DIR : Directory where the cppvrf config files are.
 # - CPPVRF_AVAILABLE_TARGETS : Contains a list of available cppvrf targets.
+# - CPPVRF_VERSION : The full version number.
+# - CPPVRF_VERSION_MAJOR : The major version number.
+# - CPPVRF_VERSION_MINOR : The minor version number.
+# - CPPVRF_VERSION_PATCH : The patch version number.
 
 @PACKAGE_INIT@
 
 include(CMakeFindDependencyMacro)
+
+# Version variables, baked in at configure time.
+set(CPPVRF_VERSION @PROJECT_VERSION@)
+set(CPPVRF_VERSION_MAJOR @PROJECT_VERSION_MAJOR@)
+set(CPPVRF_VERSION_MINOR @PROJECT_VERSION_MINOR@)
+set(CPPVRF_VERSION_PATCH @PROJECT_VERSION_PATCH@)
 
 # Set our variables.
 set(CPPVRF_FOUND NO)
@@ -36,5 +46,5 @@ endif()
 
 # Print information about available targets and directories.
 if(CPPVRF_FOUND)
-    message(STATUS "Found cppvrf version \"${PACKAGE_VERSION}\".")
+    message(STATUS "Found cppvrf version \"${CPPVRF_VERSION}\".")
 endif()

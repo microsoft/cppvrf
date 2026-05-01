@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.25)
 
 option(CPPVRF_BUILD_TESTS      "Build the tests."      OFF)
 option(CPPVRF_BUILD_BENCHMARKS "Build the benchmarks." OFF)
+option(CPPVRF_ENABLE_HARDENING "Enable security hardening compile and link flags." YES)
 
 # Currently we do not support shared builds. Warn the user.
 if(BUILD_SHARED_LIBS)
@@ -24,6 +25,50 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 project(cppvrf VERSION 1.6.2 LANGUAGES CXX)
+
+# Security hardening flags. Applied as directory-scope options; do NOT
+# propagate to downstream consumers via the install/export interface.
+if(CPPVRF_ENABLE_HARDENING)
+    if(MSVC)
+        # Control Flow Guard.
+        add_compile_options(/guard:cf)
+        add_link_options(/guard:cf)
+    else()
+        # Stack canaries.
+        add_compile_options(-fstack-protector-strong)
+
+        # Stack-clash protection (no-op on Apple Clang; gated for older
+        # GCC/Clang versions that don't support the flag).
+        if(NOT APPLE)
+            include(CheckCXXCompilerFlag)
+            check_cxx_compiler_flag(-fstack-clash-protection CPPVRF_HAS_STACK_CLASH_PROTECTION)
+            if(CPPVRF_HAS_STACK_CLASH_PROTECTION)
+                add_compile_options(-fstack-clash-protection)
+            endif()
+        endif()
+
+        # Position-independent code (static archives may be linked into
+        # shared/executable consumers).
+        set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+        # Standard library hardening (bounds-checked containers, etc.).
+        add_compile_definitions(
+            $<$<NOT:$<CONFIG:Debug>>:_GLIBCXX_ASSERTIONS>
+            $<$<NOT:$<CONFIG:Debug>>:_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST>
+        )
+
+        # Full RELRO, immediate binding, non-executable stack (ELF only).
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Android")
+            add_link_options(-Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack)
+        endif()
+
+        # Fortified libc functions (requires -O1+, skip on Apple).
+        if(NOT APPLE)
+            add_compile_options($<$<NOT:$<CONFIG:Debug>>:-U_FORTIFY_SOURCE>)
+            add_compile_definitions($<$<NOT:$<CONFIG:Debug>>:_FORTIFY_SOURCE=2>)
+        endif()
+    endif()
+endif()
 
 # Define additional directory path variables.
 include(GNUInstallDirs)

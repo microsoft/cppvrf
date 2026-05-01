@@ -24,6 +24,12 @@ After building, the executables `vrf_tests[.exe]` and `vrf_benchmarks[.exe]` are
 
 If you do not want to use presets, you can specify `-DCPPVRF_BUILD_TESTS=ON` and `-DCPPVRF_BUILD_BENCHMARKS=ON` to build the test and the benchmark suites.
 
+| Option | Description | Default |
+| --- | --- | --- |
+| `CPPVRF_BUILD_TESTS` | Build the test suite. | `OFF` |
+| `CPPVRF_BUILD_BENCHMARKS` | Build the benchmark suite. | `OFF` |
+| `CPPVRF_ENABLE_HARDENING` | Enable security hardening compile and link flags. | `ON` |
+
 ## Implemented VRFs
 
 `cppvrf` implements RSA-FDH VRF and elliptic curve VRF based on [RFC9381](https://datatracker.ietf.org/doc/rfc9381).
