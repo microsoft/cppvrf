@@ -12,17 +12,17 @@ steps:
       verbosity: 'Verbose'
       alertWarningLevel: 'High'
 
-- task: CmdLine@2
+- task: Powershell@2
   displayName: 'Bootstrap vcpkg'
   inputs:
+    targetType: 'inline'
     script: |
-      cd $(Build.SourcesDirectory)
+      $baseline = (Get-Content vcpkg.json | ConvertFrom-Json).'builtin-baseline'
       git clone https://github.com/microsoft/vcpkg.git
       cd vcpkg
-      git checkout 2026.01.16
-      bootstrap-vcpkg.bat -disableMetrics
+      git checkout $baseline
+      .\bootstrap-vcpkg.bat -disableMetrics
     workingDirectory: '$(Build.SourcesDirectory)'
-    failOnStderr: false
 
 - task: CMake@1
   displayName: 'Configure cppvrf'

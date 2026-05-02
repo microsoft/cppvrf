@@ -4,9 +4,10 @@ steps:
   inputs:
     script: |
       cd $(Build.SourcesDirectory)
+      BASELINE=$(python3 -c "import json; print(json.load(open('vcpkg.json'))['builtin-baseline'])")
       git clone https://github.com/microsoft/vcpkg.git
       cd vcpkg
-      git checkout 2026.01.16
+      git checkout $BASELINE
       ./bootstrap-vcpkg.sh -disableMetrics
     workingDirectory: '$(Build.SourcesDirectory)'
     failOnStderr: false
